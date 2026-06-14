@@ -122,9 +122,13 @@ def what_should_i_watch(request):
     return render(request, 'movies/tonight.html', {'movies': recommendations})
 
 def trending_movies(request):
-    url = f"{BASE_URL}/trending/movie/week?api_key={settings.TMDB_API_KEY}"
-    response = requests.get(url)
-    movies = response.json().get('results', [])
+    url_p1 = f"{BASE_URL}/trending/movie/week?api_key={settings.TMDB_API_KEY}&page=1"
+    response_p1 = requests.get(url_p1)
+    movies = response_p1.json().get('results', [])
+    
+    url_p2 = f"{BASE_URL}/trending/movie/week?api_key={settings.TMDB_API_KEY}&page=2"
+    response_p2 = requests.get(url_p2)
+    movies.extend(response_p2.json().get('results', []))
     
     sort_type = request.GET.get('sort', 'trending')
     if sort_type == 'rating':
@@ -134,7 +138,14 @@ def trending_movies(request):
     elif sort_type == 'newest':
         movies.sort(key=lambda x: x.get('release_date', ''), reverse=True)
         
-    return render(request, 'movies/trending.html', {'movies': movies, 'current_sort': sort_type})
+    top_10 = movies[0:10] if len(movies) > 0 else []
+    rest_movies = movies[10:] if len(movies) > 10 else []
+        
+    return render(request, 'movies/trending.html', {
+        'top_10': top_10,
+        'movies': rest_movies,
+        'current_sort': sort_type
+    })
 
 def search_movies(request):
     query = request.GET.get('q', '')
