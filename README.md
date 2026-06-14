@@ -1,19 +1,33 @@
-# 🎬 MovieMate
+# 🎬 MovieMate (Premium Edition)
 
-MovieMate is a Django-based web application that utilizes the TMDB API to discover trending movies, search for movies, and manage your personal Watchlist using MongoDB.
+MovieMate is a modern, premium Django-based web application that utilizes the TMDB API to discover trending movies, search for movies, and securely manage your personal Watchlist using MongoDB.
+
+## ✨ Project Results & UI Showcase
+Here are the recent major upgrades applied to the project:
+- **Premium SaaS Aesthetic**: A sleek, modern user interface with soft drop shadows, glassmorphism navbars, and professional Indigo styling.
+- **AJAX & Toast Notifications**: Adding/removing movies happens instantly in the background without page reloads, displaying elegant sliding Toast popups.
+- **Personalized Accounts**: Full Authentication system where each user gets their own private Watchlist.
+
+*(You can add your own screenshots here! For example:)*
+> ![Home Page Screenshot](/path/to/your/screenshot.png)
+> ![Watchlist with Toasts](/path/to/your/screenshot2.png)
 
 ## 🌟 Features
 
-- **🔥 Trending Movies:** Check out the current most popular movies.
-- **🔍 Search Movies:** Search for your favorite movies based on the TMDB database.
-- **⭐ Watchlist:** Save and manage movies you want to watch later. (Powered by MongoDB)
-- **🍿 Tonight:** Get movie recommendations based on high ratings and popularity.
+- **🛡️ Secure Authentication:** Sign up, log in, and manage your private session.
+- **🔥 Trending Movies:** Check out the current most popular movies worldwide.
+- **🔍 Search Movies:** Search for your favorite movies across the vast TMDB database.
+- **⭐ Private Watchlist:** Save movies, view posters, mark them as "Watched/Unwatched", or remove them from your personal list.
+- **🍿 Tonight:** Get highly-rated movie recommendations instantly.
 
 ## 🛠 Tech Stack
 
 - **Backend:** Python 3, Django 5.1
-- **Database:** MongoDB (via `djongo` & `pymongo`)
+- **Database:** 
+  - **SQLite:** For robust User Authentication & Sessions.
+  - **MongoDB:** (via `pymongo`) For fast, flexible Watchlist document storage.
 - **API:** TMDB (The Movie Database) API
+- **Frontend:** Vanilla JS (`fetch` API), Custom Premium CSS (No external frameworks)
 
 ## ⚙️ Getting Started
 
@@ -24,16 +38,12 @@ cd moviemate_prj
 ```
 
 ### 2. Set up virtual environment and install dependencies
-This project uses the following libraries: `django`, `djongo`, `pymongo`, `python-dotenv`, `requests`.
-
 ```bash
-python -m venv venv
-source venv/bin/activate  # Mac/Linux
-# venv\Scripts\activate   # Windows
+python -m venv .venv
+source .venv/bin/activate  # Mac/Linux
+# .venv\Scripts\activate   # Windows
 
-pip install -r requirements.txt # (if requirements.txt is available)
-# OR
-pip install django djongo pymongo python-dotenv requests
+pip install -r requirements.txt
 ```
 
 ### 3. Set Environment Variables (.env)
@@ -51,14 +61,12 @@ The application will automatically create and use a database named `moviemate_db
 
 ### 5. Run the Server
 ```bash
-python manage.py makemigrations
-python manage.py migrate
+python manage.py migrate  # Creates auth tables in SQLite
 python manage.py runserver
 ```
-Navigate to `http://127.0.0.1:8000/` in your web browser to check out the application.
+Navigate to `http://127.0.0.1:8000/` in your web browser.
 
 ## 📂 Project Structure
-- `moviemate_prj/`: Main Django project configuration folder (`settings.py`, `urls.py`)
-- `movies/`: Core Django App handling trending, searching, watchlist, and recommendations
-  - `views.py`: Core business logic, TMDB API calls, and MongoDB integration
-  - `urls.py`: Internal URL routing for the `movies` app
+- `moviemate_prj/`: Main Django project configuration folder
+- `accounts/`: App handling User Authentication (Login, Register, Logout)
+- `movies/`: Core Django App handling trending, searching, AJAX views, and MongoDB integration
