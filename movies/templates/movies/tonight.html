@@ -1,38 +1,185 @@
 {% extends "base.html" %}
-{% block title %}Tonight's Picks - MovieMate{% endblock %}
+{% block title %}Random Movie Roulette - MovieMate{% endblock %}
 {% block content %}
-<h1 class="page-title">🍿 What Should I Watch Tonight?</h1>
-<p style="text-align: center; margin-bottom: 2rem; color: var(--text-secondary);">Here are our top 5 high-rated picks tailored for you.</p>
+<style>
+.roulette-container {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+.spin-btn {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    color: #0f172a;
+    font-size: 2rem;
+    font-weight: 900;
+    padding: 1.5rem 4rem;
+    border: none;
+    border-radius: 9999px;
+    cursor: pointer;
+    box-shadow: 0 0 30px rgba(251, 191, 36, 0.5);
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+.spin-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 50px rgba(251, 191, 36, 0.8);
+}
+.spin-btn:active {
+    transform: scale(0.95);
+}
+.roulette-window {
+    width: 300px;
+    height: 450px;
+    margin: 3rem auto;
+    border: 4px solid #fbbf24;
+    border-radius: 20px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 0 40px rgba(251, 191, 36, 0.3);
+    background: #000;
+}
+/* Center indicator line */
+.roulette-window::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: rgba(239, 68, 68, 0.8);
+    transform: translateY(-50%);
+    z-index: 10;
+    pointer-events: none;
+    box-shadow: 0 0 10px rgba(239, 68, 68, 1);
+}
+.poster-strip {
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    /* Will be translated in JS */
+}
+.strip-poster {
+    width: 100%;
+    height: 450px;
+    object-fit: cover;
+    display: block;
+}
+.winner-info {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.5s ease;
+    margin-top: 2rem;
+}
+.winner-info.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+.winner-title {
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: white;
+    margin-bottom: 1rem;
+    text-shadow: 0 0 15px rgba(255,255,255,0.3);
+}
+.winner-desc {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+}
+</style>
 
-<div class="movies-grid">
-    {% for movie in movies %}
-    <div class="movie-card">
-        {% if movie.poster_path %}
-            <a href="{% url 'movies:detail' movie.id %}">
-                <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" alt="{{ movie.title }}" class="movie-poster">
-            </a>
-        {% else %}
-            <a href="{% url 'movies:detail' movie.id %}">
-                <div class="movie-poster" style="display: flex; align-items: center; justify-content: center; color: var(--text-secondary);">No Image</div>
-            </a>
-        {% endif %}
-        <div class="movie-info">
-            <a href="{% url 'movies:detail' movie.id %}" style="text-decoration: none;">
-                <h2 class="movie-title">{{ movie.title }}</h2>
-            </a>
-            <div class="movie-meta">
-                <span class="rating">⭐ {{ movie.vote_average|floatformat:1 }}</span>
-            </div>
-            <p class="movie-overview">{{ movie.overview }}</p>
-            <form action="{% url 'movies:add_to_watchlist' movie.id %}" method="post" class="ajax-form" style="margin-top: auto;">
-                <input type="hidden" name="title" value="{{ movie.title }}">
-                <input type="hidden" name="poster_path" value="{{ movie.poster_path|default_if_none:'' }}">
-                <button type="submit" class="btn-primary" style="width: 100%; font-size: 0.9rem; padding: 0.5rem;">+ Watchlist</button>
-            </form>
+<div class="roulette-container">
+    <h1 style="font-size: 3rem; margin-bottom: 1rem; font-weight: 900;">🎰 Movie Roulette</h1>
+    <p style="color: var(--text-secondary); margin-bottom: 3rem;">Can't decide? Let fate choose your movie for tonight.</p>
+
+    <button class="spin-btn" id="spinBtn" onclick="startSpin()">SPIN THE WHEEL</button>
+
+    <div class="roulette-window" id="rouletteWindow" style="display: none;">
+        <div class="poster-strip" id="posterStrip">
+            <!-- Filled by JS -->
         </div>
     </div>
-    {% empty %}
-    <div class="empty-state">Unable to load recommendations right now.</div>
-    {% endfor %}
+
+    <div class="winner-info" id="winnerInfo">
+        <h2 class="winner-title" id="winnerTitle">Movie Title</h2>
+        <p class="winner-desc" id="winnerDesc">Description goes here...</p>
+        <div style="display: flex; gap: 1rem; justify-content: center;">
+            <a href="#" id="winnerLink" class="btn-primary" style="padding: 1rem 2rem; font-size: 1.2rem; text-decoration: none;">View Details</a>
+        </div>
+    </div>
 </div>
+
+<script>
+    const moviesData = {{ movies_json|safe }};
+    const spinBtn = document.getElementById('spinBtn');
+    const rouletteWindow = document.getElementById('rouletteWindow');
+    const posterStrip = document.getElementById('posterStrip');
+    const winnerInfo = document.getElementById('winnerInfo');
+    const winnerTitle = document.getElementById('winnerTitle');
+    const winnerDesc = document.getElementById('winnerDesc');
+    const winnerLink = document.getElementById('winnerLink');
+
+    let isSpinning = false;
+    const itemHeight = 450; 
+    
+    function buildStrip() {
+        posterStrip.innerHTML = '';
+        const repeatedMovies = [...moviesData, ...moviesData, ...moviesData, ...moviesData, ...moviesData, ...moviesData];
+        
+        repeatedMovies.forEach(movie => {
+            const img = document.createElement('img');
+            img.className = 'strip-poster';
+            if (movie.poster_path) {
+                img.src = `https://image.tmdb.org/t/p/w500${movie.poster_path}`;
+            } else {
+                img.src = 'https://via.placeholder.com/300x450/1e293b/ffffff?text=No+Poster';
+            }
+            posterStrip.appendChild(img);
+        });
+        return repeatedMovies;
+    }
+
+    function startSpin() {
+        if (isSpinning || moviesData.length === 0) {
+            if (moviesData.length === 0) alert("No movies found to spin!");
+            return;
+        }
+        isSpinning = true;
+        
+        spinBtn.style.display = 'none';
+        rouletteWindow.style.display = 'block';
+        winnerInfo.classList.remove('show');
+        
+        const stripItems = buildStrip();
+        
+        const winIndexInSet = Math.floor(Math.random() * moviesData.length);
+        const winIndexTotal = (moviesData.length * 4) + winIndexInSet; 
+        
+        const winningMovie = stripItems[winIndexTotal];
+        
+        const targetY = -(winIndexTotal * itemHeight);
+        
+        posterStrip.style.transition = 'none';
+        posterStrip.style.transform = `translateY(0px)`;
+        
+        void posterStrip.offsetWidth;
+        
+        posterStrip.style.transition = 'transform 4s cubic-bezier(0.165, 0.84, 0.44, 1)';
+        posterStrip.style.transform = `translateY(${targetY}px)`;
+        
+        setTimeout(() => {
+            winnerTitle.textContent = winningMovie.title;
+            winnerDesc.textContent = winningMovie.overview;
+            winnerLink.href = `/movie/${winningMovie.movie_id}/`;
+            winnerInfo.classList.add('show');
+            isSpinning = false;
+            spinBtn.textContent = "SPIN AGAIN";
+            spinBtn.style.display = 'inline-block';
+        }, 4100);
+    }
+</script>
 {% endblock %}

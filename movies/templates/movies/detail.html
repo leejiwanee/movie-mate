@@ -29,13 +29,27 @@
             
             {% if movie.videos.results %}
                 <h2 style="font-size: 1.8rem; margin-bottom: 1.5rem; color: var(--text-primary); letter-spacing: -0.5px;">Trailer</h2>
-                <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 16px; box-shadow: var(--shadow-md);">
+                <div id="youtube-player-container" style="position: relative; width: 100%; aspect-ratio: 16/9; overflow: hidden; border-radius: 16px; box-shadow: var(--shadow-md); z-index: 1; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); background: #000;">
                     {% for video in movie.videos.results %}
                         {% if video.type == 'Trailer' and video.site == 'YouTube' %}
-                            <iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="https://www.youtube-nocookie.com/embed/{{ video.key }}" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+                            <div id="ytplayer_{{ forloop.counter }}" class="yt-placeholder" data-key="{{ video.key }}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></div>
                         {% endif %}
                     {% endfor %}
                 </div>
+                <style>
+                    
+                    /* Theater active state for the container */
+                    #youtube-player-container.theater-active {
+                        position: fixed !important;
+                        top: 50% !important;
+                        left: 50% !important;
+                        transform: translate(-50%, -50%) !important;
+                        width: 85vw !important;
+                        max-width: 1400px !important;
+                        box-shadow: 0 0 150px rgba(251, 191, 36, 0.2) !important;
+                        z-index: 10001 !important;
+                    }
+                </style>
             {% endif %}
         </div>
 
@@ -43,13 +57,17 @@
         <div>
             <!-- Watchlist Action Box -->
             <div style="background: var(--bg-card); padding: 2rem; border-radius: 20px; box-shadow: var(--shadow-md); border: 1px solid var(--border-color); margin-bottom: 3rem;">
-                <form action="{% url 'movies:add_to_watchlist' movie.id %}" method="post" class="ajax-form">
+                <form action="{% url 'movies:add_to_watchlist' movie.id %}" method="post" class="ajax-form" style="margin-bottom: 1rem;">
                     <input type="hidden" name="title" value="{{ movie.title }}">
                     <input type="hidden" name="poster_path" value="{{ movie.poster_path|default_if_none:'' }}">
                     <button type="submit" class="btn-primary" style="width: 100%; font-size: 1.1rem; padding: 1.2rem; font-weight: 700; border-radius: 12px;">
                         {% if in_watchlist %}Already in Watchlist{% else %}+ Add to Watchlist{% endif %}
                     </button>
                 </form>
+                
+                <button onclick="openTicketModal()" class="btn-secondary" style="width: 100%; font-size: 1.1rem; padding: 1.2rem; font-weight: 700; border-radius: 12px; border: 2px solid #fbbf24; color: #fbbf24; background: transparent; transition: all 0.2s; cursor: pointer;" onmouseover="this.style.background='rgba(251, 191, 36, 0.1)'" onmouseout="this.style.background='transparent'">
+                    🎫 Shareable Ticket
+                </button>
             </div>
 
             <!-- Cast List -->
@@ -136,4 +154,204 @@
         }
     }
 </style>
+
+<!-- Theater Overlay Dimmer -->
+<div id="theaterOverlay" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.95); z-index: 10000; display: none; opacity: 0; transition: opacity 0.5s ease;">
+    <button onclick="closeTheater()" style="position: absolute; top: 2rem; right: 2rem; background: transparent; border: none; color: white; font-size: 2.5rem; cursor: pointer; opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">✖</button>
+</div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<!-- Ticket Generator Modal -->
+<style>
+    #captureTicketWrapper { transition: transform 0.3s ease; }
+    @media (max-height: 850px) { #captureTicketWrapper { transform: scale(0.85); } }
+    @media (max-height: 700px) { #captureTicketWrapper { transform: scale(0.7); } }
+    @media (max-width: 450px) { #captureTicketWrapper { transform: scale(0.8); } }
+</style>
+<div id="ticketModal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); z-index: 10000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(8px); opacity: 0; transition: opacity 0.3s ease;">
+    <!-- Fixed Close Button (Always visible) -->
+    <button onclick="closeTicketModal()" style="position: absolute; top: 2rem; right: 2rem; width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.1); color: white; border: none; font-size: 1.5rem; font-weight: bold; cursor: pointer; z-index: 10001; transition: background 0.2s; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">✖</button>
+
+    <div id="captureTicketWrapper" style="background: var(--bg-card); padding: 2rem; border-radius: 24px; box-shadow: 0 30px 60px rgba(0,0,0,0.8); display: flex; flex-direction: column; align-items: center;">
+        
+        <!-- The Ticket Element to be Captured -->
+        <div id="captureTicket" style="width: 320px; background: linear-gradient(to bottom, #1e293b, #0f172a); border-radius: 20px; overflow: hidden; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 2px solid #fbbf24;">
+            
+            <!-- Ticket Header -->
+            <div style="background: #fbbf24; color: #0f172a; padding: 1.2rem; text-align: center; font-weight: 900; letter-spacing: 3px; text-transform: uppercase; font-size: 1.1rem;">
+                🎬 MovieMate VIP 🎬
+            </div>
+            
+            <!-- Poster -->
+            <div style="width: 100%; height: 350px; position: relative;">
+                {% if movie.poster_path %}
+                    <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}?ticket_cors=1" style="width: 100%; height: 100%; object-fit: cover; display: block;" crossorigin="anonymous">
+                {% else %}
+                    <div style="width: 100%; height: 100%; background: #334155; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">No Poster</div>
+                {% endif %}
+                <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 120px; background: linear-gradient(to top, #1e293b, transparent);"></div>
+            </div>
+            
+            <!-- Details -->
+            <div style="padding: 1.5rem; text-align: center;">
+                <h2 style="font-size: 1.6rem; font-weight: 800; color: white; margin-bottom: 0.5rem; line-height: 1.2; text-shadow: 0 2px 5px rgba(0,0,0,0.5);">{{ movie.title }}</h2>
+                <div style="color: #fbbf24; font-weight: 700; font-size: 1.2rem; margin-bottom: 1.5rem;">⭐ {{ movie.vote_average|floatformat:1 }} / 10</div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; border-top: 1px dashed rgba(255,255,255,0.2); border-bottom: 1px dashed rgba(255,255,255,0.2); padding: 1.2rem 0;">
+                    <div>
+                        <div style="font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; font-weight: bold; letter-spacing: 1px;">Year</div>
+                        <div style="font-size: 1.2rem; color: white; font-weight: 700; margin-top: 0.3rem;">{{ movie.release_date|slice:":4" }}</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; font-weight: bold; letter-spacing: 1px;">Runtime</div>
+                        <div style="font-size: 1.2rem; color: white; font-weight: 700; margin-top: 0.3rem;">{{ movie.runtime|default:"-" }} min</div>
+                    </div>
+                </div>
+                
+                <!-- Fake Barcode -->
+                <div style="display: flex; justify-content: center; gap: 2px; height: 40px; margin-bottom: 0.5rem; opacity: 0.8;">
+                    <div style="width: 3px; background: white; height: 100%;"></div>
+                    <div style="width: 6px; background: white; height: 100%;"></div>
+                    <div style="width: 2px; background: white; height: 100%;"></div>
+                    <div style="width: 8px; background: white; height: 100%;"></div>
+                    <div style="width: 4px; background: white; height: 100%;"></div>
+                    <div style="width: 2px; background: white; height: 100%;"></div>
+                    <div style="width: 6px; background: white; height: 100%;"></div>
+                    <div style="width: 3px; background: white; height: 100%;"></div>
+                    <div style="width: 7px; background: white; height: 100%;"></div>
+                    <div style="width: 2px; background: white; height: 100%;"></div>
+                    <div style="width: 5px; background: white; height: 100%;"></div>
+                    <div style="width: 3px; background: white; height: 100%;"></div>
+                    <div style="width: 6px; background: white; height: 100%;"></div>
+                    <div style="width: 2px; background: white; height: 100%;"></div>
+                    <div style="width: 8px; background: white; height: 100%;"></div>
+                    <div style="width: 4px; background: white; height: 100%;"></div>
+                    <div style="width: 3px; background: white; height: 100%;"></div>
+                </div>
+                <div style="font-size: 0.75rem; color: #94a3b8; letter-spacing: 6px; font-family: monospace;">{{ movie.id }}MVMATE26</div>
+            </div>
+            
+            <!-- Left/Right Punched Holes -->
+            <div style="position: absolute; top: 380px; left: -15px; width: 30px; height: 30px; background: var(--bg-card); border-radius: 50%; border-right: 2px solid #fbbf24;"></div>
+            <div style="position: absolute; top: 380px; right: -15px; width: 30px; height: 30px; background: var(--bg-card); border-radius: 50%; border-left: 2px solid #fbbf24;"></div>
+        </div>
+        
+        <!-- Action Button -->
+        <button onclick="downloadTicket()" class="btn-primary" style="width: 100%; margin-top: 2rem; padding: 1.2rem; font-size: 1.2rem; background: linear-gradient(135deg, #10b981, #059669); font-weight: 800; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 0.5rem; border: none; cursor: pointer; color: white;">📥 Download to Share</button>
+    </div>
+</div>
+
+<script>
+    const ticketModal = document.getElementById('ticketModal');
+
+    function openTicketModal() {
+        ticketModal.style.display = 'flex';
+        void ticketModal.offsetWidth;
+        ticketModal.style.opacity = '1';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeTicketModal() {
+        ticketModal.style.opacity = '0';
+        setTimeout(() => {
+            ticketModal.style.display = 'none';
+            document.body.style.overflow = '';
+        }, 300);
+    }
+
+    function downloadTicket() {
+        const ticketElement = document.getElementById('captureTicket');
+        
+        // We need to temporarily remove the punched holes background color to match the image, 
+        // actually wait, html2canvas will just capture the div exactly.
+        // But since the holes are var(--bg-card), it's fine, it will look like holes on a dark background.
+
+        html2canvas(ticketElement, {
+            useCORS: true, // Important for loading the TMDB poster
+            backgroundColor: null,
+            scale: 2 // High resolution
+        }).then(canvas => {
+            // Convert canvas to image data URL
+            const imgData = canvas.toDataURL("image/png");
+            
+            // Create a fake anchor tag to trigger download
+            const link = document.createElement('a');
+            link.download = 'MovieMate_Ticket_{{ movie.title|slugify }}.png';
+            link.href = imgData;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    }
+</script>
+
+<script>
+    var player;
+    function onYouTubeIframeAPIReady() {
+        const placeholders = document.querySelectorAll('.yt-placeholder');
+        if (placeholders.length > 0) {
+            const first = placeholders[0];
+            const videoKey = first.getAttribute('data-key');
+            
+            player = new YT.Player(first.id, {
+                videoId: videoKey,
+                width: '100%',
+                height: '100%',
+                playerVars: {
+                    'origin': window.location.origin,
+                    'rel': 0
+                },
+                events: {
+                    'onStateChange': onPlayerStateChange
+                }
+            });
+
+            // Hide subsequent trailers if any
+            for(let i = 1; i < placeholders.length; i++) {
+                placeholders[i].style.display = 'none';
+            }
+        }
+    }
+
+    var isTheaterMode = false;
+
+    function onPlayerStateChange(event) {
+        if (event.data == YT.PlayerState.PLAYING && !isTheaterMode) {
+            enterTheaterMode();
+        }
+    }
+
+    function enterTheaterMode() {
+        isTheaterMode = true;
+        const container = document.getElementById('youtube-player-container');
+        const dimmer = document.getElementById('theaterOverlay');
+
+        container.classList.add('theater-active');
+        dimmer.style.display = 'block';
+        void dimmer.offsetWidth; // force reflow
+        dimmer.style.opacity = '1';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeTheater() {
+        isTheaterMode = false;
+        const container = document.getElementById('youtube-player-container');
+        const dimmer = document.getElementById('theaterOverlay');
+
+        container.classList.remove('theater-active');
+        dimmer.style.opacity = '0';
+        document.body.style.overflow = '';
+
+        if (player && typeof player.pauseVideo === 'function') {
+            player.pauseVideo();
+        }
+
+        setTimeout(() => {
+            dimmer.style.display = 'none';
+        }, 500);
+    }
+</script>
+
 {% endblock %}

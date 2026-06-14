@@ -26,9 +26,11 @@
             <ul class="nav-links" style="align-items: center;">
                 <li><a href="{% url 'movies:trending' %}">Home</a></li>
                 <li><a href="{% url 'movies:tonight' %}">Tonight's Picks</a></li>
+                <li><a href="{% url 'movies:calendar' %}" style="color: #fbbf24;">Coming Soon 📆</a></li>
                 {% if user.is_authenticated %}
                     <li><a href="{% url 'movies:dashboard' %}">Dashboard</a></li>
                     <li><a href="{% url 'movies:watchlist' %}">Watchlist</a></li>
+                    <li><a href="{% url 'movies:diary' %}">Diary</a></li>
                     <li><a href="{% url 'accounts:logout' %}" style="color: var(--danger-color);">Logout ({{ user.username }})</a></li>
                 {% else %}
                     <li><a href="{% url 'accounts:login' %}" style="color: var(--primary-color);">Sign In</a></li>

@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+{% block title %}Your MovieMate Wrapped{% endblock %}
+{% block content %}
+<style>
+/* Hide navbar and footer for true fullscreen experience */
+.navbar, .footer { display: none !important; }
+.main-content { padding: 0 !important; margin: 0 !important; max-width: 100% !important; }
+body { overflow: hidden; background: #000; }
+
+.wrapped-container {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: radial-gradient(circle at center, #1e293b 0%, #020617 100%);
+    overflow: hidden;
+}
+
+.slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 2rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    transform: scale(0.95);
+}
+
+.slide.active {
+    opacity: 1;
+    pointer-events: auto;
+    transform: scale(1);
+    z-index: 10;
+}
+
+/* Animations */
+@keyframes popIn {
+    0% { transform: scale(0); opacity: 0; }
+    80% { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes floatUp {
+    0% { transform: translateY(50px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+}
+
+.slide.active .animate-pop { animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+.slide.active .animate-float { animation: floatUp 0.8s ease forwards; opacity: 0; }
+.slide.active .delay-1 { animation-delay: 0.5s; }
+.slide.active .delay-2 { animation-delay: 1.2s; }
+.slide.active .delay-3 { animation-delay: 2.0s; }
+
+/* Slide Specific Styles */
+.huge-text {
+    font-size: 5rem;
+    font-weight: 900;
+    background: linear-gradient(to right, #fbbf24, #f59e0b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 1rem 0;
+    line-height: 1.1;
+    text-transform: uppercase;
+}
+.sub-text {
+    font-size: 1.5rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+.favorite-poster {
+    width: 250px;
+    height: 375px;
+    border-radius: 16px;
+    box-shadow: 0 0 50px rgba(251, 191, 36, 0.5);
+    margin: 2rem 0;
+}
+
+/* Navigation Controls */
+.controls {
+    position: absolute;
+    bottom: 2rem;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    z-index: 100;
+}
+.dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.3);
+    cursor: pointer;
+    transition: all 0.3s;
+}
+.dot.active {
+    background: #fbbf24;
+    transform: scale(1.3);
+}
+
+.next-btn {
+    position: absolute;
+    right: 5%;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255,255,255,0.1);
+    color: white;
+    border: none;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    cursor: pointer;
+    z-index: 100;
+    backdrop-filter: blur(10px);
+}
+.next-btn:hover { background: rgba(255,255,255,0.2); }
+</style>
+
+<div class="wrapped-container" id="wrappedContainer" onclick="nextSlide()">
+    <!-- Slide 1: Intro -->
+    <div class="slide active" id="slide-0">
+        <h1 class="huge-text animate-pop">Your 2026<br>MovieMate Wrapped</h1>
+        <p class="sub-text animate-float delay-1">Ready to look back at your cinematic year?</p>
+        <p style="margin-top: 3rem; color: #64748b; font-size: 0.9rem;" class="animate-float delay-2">(Click anywhere to continue)</p>
+    </div>
+
+    <!-- Slide 2: Stats -->
+    <div class="slide" id="slide-1">
+        <p class="sub-text animate-float">This year, you watched</p>
+        <h1 class="huge-text animate-pop delay-1">{{ total_watched }} Movies</h1>
+        <p class="sub-text animate-float delay-2">That's approximately <span style="color: #fbbf24; font-size: 2rem; font-weight: 800;">{{ total_hours }}</span> hours of screen time!</p>
+    </div>
+
+    <!-- Slide 3: Genre -->
+    <div class="slide" id="slide-2">
+        <p class="sub-text animate-float">Your true calling is...</p>
+        <h1 class="huge-text animate-pop delay-1" style="font-size: 6rem;">{{ top_genre }}</h1>
+        <p class="sub-text animate-float delay-2">You couldn't get enough of it.</p>
+    </div>
+
+    <!-- Slide 4: Favorite -->
+    <div class="slide" id="slide-3">
+        <p class="sub-text animate-float">Out of everything you watched...</p>
+        <p class="sub-text animate-float delay-1">This was your absolute favorite.</p>
+        {% if highest_rated %}
+            <img src="https://image.tmdb.org/t/p/w500{{ highest_rated.poster_path }}" class="favorite-poster animate-pop delay-2">
+            <h2 class="sub-text animate-float delay-3" style="color: white; font-size: 2rem;">{{ highest_rated.title }}</h2>
+            <p class="animate-float delay-3" style="color: #fbbf24; font-size: 1.5rem; margin-top: 0.5rem;">⭐ {{ highest_rated.rating }} / 5</p>
+        {% else %}
+            <h2 class="huge-text animate-pop delay-2">Wait...</h2>
+            <p class="sub-text animate-float delay-3">You haven't rated anything yet!</p>
+        {% endif %}
+    </div>
+
+    <!-- Slide 5: Outro -->
+    <div class="slide" id="slide-4">
+        <h1 class="huge-text animate-pop">What a Year!</h1>
+        <p class="sub-text animate-float delay-1">Thanks for spending it with MovieMate.</p>
+        <div class="animate-float delay-2" style="margin-top: 4rem;">
+            <a href="{% url 'movies:dashboard' %}" class="btn-primary" style="padding: 1rem 3rem; font-size: 1.2rem; text-decoration: none;">Back to Dashboard</a>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="controls" id="dots">
+        <div class="dot active"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+    </div>
+</div>
+
+<script>
+    let currentSlide = 0;
+    const totalSlides = 5;
+    const slides = document.querySelectorAll('.slide');
+    const dots = document.querySelectorAll('.dot');
+
+    function showSlide(index) {
+        slides.forEach(s => s.classList.remove('active'));
+        dots.forEach(d => d.classList.remove('active'));
+        
+        slides[index].classList.add('active');
+        dots[index].classList.add('active');
+    }
+
+    function nextSlide() {
+        if (currentSlide < totalSlides - 1) {
+            currentSlide++;
+            showSlide(currentSlide);
+        }
+    }
+</script>
+{% endblock %}

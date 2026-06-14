@@ -6,7 +6,9 @@ from django.contrib.auth.decorators import login_required
 from django.conf import settings
 import requests
 import json
+import random
 from collections import Counter
+from datetime import datetime
 
 # TMDB API 기본 주소 설정
 BASE_URL = 'https://api.themoviedb.org/3'
@@ -103,8 +105,12 @@ def update_review(request, movie_id):
 def get_watchlist(request):
     filter_type = request.GET.get('filter', 'all')
     sort_type = request.GET.get('sort', 'newest')
+    collection_filter = request.GET.get('collection', None)
     
     query = {"user_id": request.user.id}
+    
+    if collection_filter:
+        query['custom_collections'] = collection_filter
     
     if filter_type == 'watched':
         query['watched'] = True
@@ -120,18 +126,78 @@ def get_watchlist(request):
     cursor = watchlist_collection.find(query, {'_id': 0}).sort(sort_logic)
     movies = list(cursor)
     
+    collections_list = watchlist_collection.distinct("custom_collections", {"user_id": request.user.id})
+    collections_list = [c for c in collections_list if c]
+    
     context = {
         'movies': movies,
         'current_filter': filter_type,
-        'current_sort': sort_type
+        'current_sort': sort_type,
+        'current_collection': collection_filter,
+        'collections_list': collections_list
     }
     return render(request, 'movies/watchlist.html', context)
 
+@csrf_exempt
+@login_required(login_url='/accounts/login/')
+def update_collection(request, movie_id):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            data = request.POST
+            
+        action = data.get('action')
+        collection_name = data.get('collection_name', '').strip()
+        
+        if not collection_name:
+            return JsonResponse({"status": "error", "message": "Collection name cannot be empty."})
+            
+        movie = watchlist_collection.find_one({"movie_id": movie_id, "user_id": request.user.id})
+        if movie:
+            if action == 'add':
+                watchlist_collection.update_one(
+                    {"movie_id": movie_id, "user_id": request.user.id},
+                    {"$addToSet": {"custom_collections": collection_name}}
+                )
+                return JsonResponse({"status": "success", "message": f"Added to '{collection_name}'!"})
+            elif action == 'remove':
+                watchlist_collection.update_one(
+                    {"movie_id": movie_id, "user_id": request.user.id},
+                    {"$pull": {"custom_collections": collection_name}}
+                )
+                return JsonResponse({"status": "success", "message": f"Removed from '{collection_name}'!"})
+                
+        return JsonResponse({"status": "error", "message": "Movie not found in Watchlist."})
+    return JsonResponse({"status": "error", "message": "Invalid request method."})
+
+@login_required(login_url='/accounts/login/')
 def what_should_i_watch(request):
-    url = f"{BASE_URL}/discover/movie?api_key={settings.TMDB_API_KEY}&sort_by=popularity.desc&vote_average.gte=7.5"
-    response = requests.get(url)
-    recommendations = response.json().get('results', [])[:5] 
-    return render(request, 'movies/tonight.html', {'movies': recommendations})
+    unwatched_cursor = watchlist_collection.find({"user_id": request.user.id, "watched": False}, {"_id": 0})
+    pool = list(unwatched_cursor)
+    
+    if len(pool) < 15:
+        url = f"{BASE_URL}/trending/movie/week?api_key={settings.TMDB_API_KEY}"
+        try:
+            response = requests.get(url)
+            trending = response.json().get('results', [])
+            for t in trending:
+                mapped = {
+                    "movie_id": t.get("id"),
+                    "title": t.get("title"),
+                    "poster_path": t.get("poster_path"),
+                    "overview": t.get("overview")
+                }
+                if not any(m.get('movie_id') == mapped['movie_id'] for m in pool):
+                    pool.append(mapped)
+        except Exception:
+            pass
+            
+    random.shuffle(pool)
+    
+    return render(request, 'movies/tonight.html', {
+        'movies_json': json.dumps(pool)
+    })
 
 def trending_movies(request):
     url_p1 = f"{BASE_URL}/trending/movie/week?api_key={settings.TMDB_API_KEY}&page=1"
@@ -211,6 +277,26 @@ def dashboard(request):
     top_genres = genre_counter.most_common(5)
     genre_labels = [g[0] for g in top_genres]
     genre_data = [g[1] for g in top_genres]
+    
+    # Achievements Calculation
+    earned_badges = []
+    locked_badges = []
+    total_reviews = watchlist_collection.count_documents({"user_id": user_id, "review_text": {"$exists": True, "$ne": ""}})
+    
+    badges = [
+        {"icon": "🎬", "title": "First Blood", "desc": "Added 1st movie", "unlocked": total_count >= 1},
+        {"icon": "🍿", "title": "Cinephile", "desc": "Watched 10 movies", "unlocked": watched_count >= 10},
+        {"icon": "✍️", "title": "The Critic", "desc": "Wrote 3 reviews", "unlocked": total_reviews >= 3},
+        {"icon": "💯", "title": "Completionist", "desc": "100% Watched (min 5)", "unlocked": progress_percentage == 100 and total_count >= 5},
+        {"icon": "🦸‍♂️", "title": "Action Hero", "desc": "Watched 3 Action movies", "unlocked": genre_counter.get('Action', 0) >= 3},
+        {"icon": "🛸", "title": "Sci-Fi Explorer", "desc": "Watched 3 Sci-Fi movies", "unlocked": genre_counter.get('Science Fiction', 0) >= 3},
+    ]
+    
+    for b in badges:
+        if b['unlocked']:
+            earned_badges.append(b)
+        else:
+            locked_badges.append(b)
         
     context = {
         'total_count': total_count,
@@ -221,6 +307,86 @@ def dashboard(request):
         'top_rated': top_rated,
         'recently_added': recently_added,
         'genre_labels_json': json.dumps(genre_labels),
-        'genre_data_json': json.dumps(genre_data)
+        'genre_data_json': json.dumps(genre_data),
+        'earned_badges': earned_badges,
+        'locked_badges': locked_badges
     }
     return render(request, 'movies/dashboard.html', context)
+
+def upcoming_calendar(request):
+    url = f"{BASE_URL}/movie/upcoming?api_key={settings.TMDB_API_KEY}&region=US&page=1"
+    response = requests.get(url)
+    movies = response.json().get('results', [])
+    
+    url2 = f"{BASE_URL}/movie/upcoming?api_key={settings.TMDB_API_KEY}&region=US&page=2"
+    response2 = requests.get(url2)
+    movies.extend(response2.json().get('results', []))
+    
+    today = datetime.now().strftime('%Y-%m-%d')
+    upcoming_movies = [m for m in movies if m.get('release_date') and m['release_date'] > today]
+    
+    # Remove duplicates if any
+    seen = set()
+    unique_upcoming = []
+    for m in upcoming_movies:
+        if m['id'] not in seen:
+            unique_upcoming.append(m)
+            seen.add(m['id'])
+    
+    unique_upcoming.sort(key=lambda x: x['release_date'])
+    
+    for m in unique_upcoming:
+        try:
+            date_obj = datetime.strptime(m['release_date'], '%Y-%m-%d')
+            m['release_month'] = date_obj.strftime('%b').upper()
+            m['release_day'] = date_obj.strftime('%d')
+            m['release_year'] = date_obj.strftime('%Y')
+        except ValueError:
+            m['release_month'] = ''
+            m['release_day'] = ''
+            m['release_year'] = ''
+            
+    return render(request, 'movies/calendar.html', {'movies': unique_upcoming})
+
+@login_required(login_url='/accounts/login/')
+def movie_wrapped(request):
+    user_id = request.user.id
+    
+    watched_movies = list(watchlist_collection.find({"user_id": user_id, "watched": True}))
+    total_watched = len(watched_movies)
+    total_hours = total_watched * 2 
+    
+    genre_counter = Counter()
+    highest_rated = None
+    max_rating = -1
+    
+    for m in watched_movies:
+        if 'genres' in m and m['genres']:
+            for g in m['genres']:
+                genre_counter[g] += 1
+                
+        rating = m.get('rating', 0)
+        if rating > max_rating:
+            max_rating = rating
+            highest_rated = m
+            
+    top_genre = genre_counter.most_common(1)[0][0] if genre_counter else "Unknown"
+    
+    context = {
+        'total_watched': total_watched,
+        'total_hours': total_hours,
+        'top_genre': top_genre,
+        'highest_rated': highest_rated,
+    }
+    
+    return render(request, 'movies/wrapped.html', context)
+
+@login_required(login_url='/accounts/login/')
+def movie_diary(request):
+    user_id = request.user.id
+    
+    # Fetch watched movies and sort by ObjectId descending (newest added to watchlist first)
+    watched_movies_cursor = watchlist_collection.find({"user_id": user_id, "watched": True}).sort("_id", -1)
+    watched_movies = list(watched_movies_cursor)
+    
+    return render(request, 'movies/diary.html', {'diary_entries': watched_movies})
