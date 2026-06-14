@@ -1,10 +1,36 @@
-<h1>Trending Movies</h1>
-<form action="{% url 'movies:search' %}" method="get">
-    <input type="text" name="q" placeholder="Search movies...">
-    <button type="submit">Search</button>
+{% extends "base.html" %}
+{% block title %}Trending Movies - MovieMate{% endblock %}
+{% block content %}
+<h1 class="page-title">🔥 Trending Movies</h1>
+
+<form action="{% url 'movies:search' %}" method="get" class="search-form">
+    <input type="text" name="q" placeholder="Search for your favorite movies..." class="search-input" required>
+    <button type="submit" class="btn-primary">Search</button>
 </form>
-<ul>
+
+<div class="movies-grid">
     {% for movie in movies %}
-        <li>{{ movie.title }} (Rating: {{ movie.vote_average }})</li>
+    <div class="movie-card">
+        {% if movie.poster_path %}
+            <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" alt="{{ movie.title }}" class="movie-poster">
+        {% else %}
+            <div class="movie-poster" style="display: flex; align-items: center; justify-content: center; color: var(--text-secondary);">No Image</div>
+        {% endif %}
+        <div class="movie-info">
+            <h2 class="movie-title">{{ movie.title }}</h2>
+            <div class="movie-meta">
+                <span>{{ movie.release_date|slice:":4" }}</span>
+                <span class="rating">⭐ {{ movie.vote_average|floatformat:1 }}</span>
+            </div>
+            <form action="{% url 'movies:add_to_watchlist' movie.id %}" method="post" class="ajax-form" style="margin-top: auto;">
+                <input type="hidden" name="title" value="{{ movie.title }}">
+                <input type="hidden" name="poster_path" value="{{ movie.poster_path|default_if_none:'' }}">
+                <button type="submit" class="btn-primary" style="width: 100%; font-size: 0.9rem; padding: 0.5rem;">+ Watchlist</button>
+            </form>
+        </div>
+    </div>
+    {% empty %}
+    <div class="empty-state">No trending movies found right now.</div>
     {% endfor %}
-</ul>
+</div>
+{% endblock %}

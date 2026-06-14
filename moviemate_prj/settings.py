@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'movies',
 ]
 
 MIDDLEWARE = [
@@ -79,11 +80,8 @@ WSGI_APPLICATION = 'moviemate_prj.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'djongo',
-        'NAME': 'moviemate_db',
-        'CLIENT': {
-            'host': 'mongodb://localhost:27017/',
-        }
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 

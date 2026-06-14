@@ -1,9 +1,41 @@
-<h1>My Watchlist</h1>
-<a href="{% url 'movies:trending' %}">Home</a>
-<ul>
+{% extends "base.html" %}
+{% block title %}My Watchlist - MovieMate{% endblock %}
+{% block content %}
+<h1 class="page-title">⭐ My Watchlist</h1>
+
+<div class="movies-grid">
     {% for movie in movies %}
-        <li>{{ movie.title }} - Watched: {{ movie.watched }}</li>
+    <div class="movie-card">
+        {% if movie.poster_path %}
+            <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" alt="{{ movie.title }}" class="movie-poster">
+        {% else %}
+            <div class="movie-poster" style="display: flex; align-items: center; justify-content: center; color: var(--text-secondary);">No Image</div>
+        {% endif %}
+        <div class="movie-info">
+            <h2 class="movie-title">{{ movie.title }}</h2>
+            <div class="movie-meta" style="margin-bottom: 1.5rem;">
+                <span>Status:</span>
+                {% if movie.watched %}
+                    <span style="color: var(--success-color); font-weight: 700;">✅ Watched</span>
+                {% else %}
+                    <span style="color: var(--text-secondary); font-weight: 700;">👀 To Watch</span>
+                {% endif %}
+            </div>
+            
+            <div class="card-actions">
+                <form action="{% url 'movies:toggle_watched' movie.movie_id %}" method="post" class="ajax-form" style="flex: 1;">
+                    <button type="submit" class="btn-success" style="width: 100%;">
+                        {% if movie.watched %}Mark Unwatched{% else %}Mark Watched{% endif %}
+                    </button>
+                </form>
+                <form action="{% url 'movies:remove_from_watchlist' movie.movie_id %}" method="post" class="ajax-form" style="flex: 1;">
+                    <button type="submit" class="btn-danger" style="width: 100%;">Remove</button>
+                </form>
+            </div>
+        </div>
+    </div>
     {% empty %}
-        <li>Watchlist is empty.</li>
+    <div class="empty-state">Your watchlist is empty. Discover movies on the Trending page!</div>
     {% endfor %}
-</ul>
+</div>
+{% endblock %}

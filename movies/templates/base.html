@@ -1,0 +1,101 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}MovieMate{% endblock %}</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}?v=2.0">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="{% url 'movies:trending' %}" class="logo">🎬 MovieMate</a>
+            <ul class="nav-links">
+                <li><a href="{% url 'movies:trending' %}">Home</a></li>
+                <li><a href="{% url 'movies:tonight' %}">Tonight's Picks</a></li>
+                <li><a href="{% url 'movies:watchlist' %}">Watchlist</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer class="footer">
+        <p>&copy; 2026 MovieMate. Powered by TMDB.</p>
+    </footer>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- JavaScript for AJAX Forms and Toasts -->
+    <script>
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            
+            const icon = type === 'success' ? '✅' : '❌';
+            toast.innerHTML = `
+                <div class="toast-icon">${icon}</div>
+                <div class="toast-message">${message}</div>
+            `;
+            
+            container.appendChild(toast);
+            
+            // Trigger animation
+            setTimeout(() => toast.classList.add('show'), 10);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const ajaxForms = document.querySelectorAll('.ajax-form');
+            ajaxForms.forEach(form => {
+                form.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    
+                    const formData = new FormData(form);
+                    const url = form.getAttribute('action');
+                    
+                    const data = {};
+                    formData.forEach((value, key) => { data[key] = value });
+                    
+                    try {
+                        const response = await fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: JSON.stringify(data)
+                        });
+                        
+                        const result = await response.json();
+                        showToast(result.message, result.status);
+                        
+                        // If we are on the watchlist page, reload to show updates
+                        if (window.location.pathname.includes('watchlist')) {
+                            setTimeout(() => window.location.reload(), 1000);
+                        }
+                    } catch (error) {
+                        showToast('An error occurred. Please try again.', 'error');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

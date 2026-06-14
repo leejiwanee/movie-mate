@@ -1,9 +1,32 @@
-<h1>What Should I Watch Tonight?</h1>
-<a href="{% url 'movies:trending' %}">Home</a>
-<p>Here are our top 5 picks for you:</p>
-<ul>
+{% extends "base.html" %}
+{% block title %}Tonight's Picks - MovieMate{% endblock %}
+{% block content %}
+<h1 class="page-title">🍿 What Should I Watch Tonight?</h1>
+<p style="text-align: center; margin-bottom: 2rem; color: var(--text-secondary);">Here are our top 5 high-rated picks tailored for you.</p>
+
+<div class="movies-grid">
     {% for movie in movies %}
-        <li><strong>{{ movie.title }}</strong> (Rating: {{ movie.vote_average }})<br>
-        <small>{{ movie.overview }}</small></li>
+    <div class="movie-card">
+        {% if movie.poster_path %}
+            <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" alt="{{ movie.title }}" class="movie-poster">
+        {% else %}
+            <div class="movie-poster" style="display: flex; align-items: center; justify-content: center; color: var(--text-secondary);">No Image</div>
+        {% endif %}
+        <div class="movie-info">
+            <h2 class="movie-title">{{ movie.title }}</h2>
+            <div class="movie-meta">
+                <span class="rating">⭐ {{ movie.vote_average|floatformat:1 }}</span>
+            </div>
+            <p class="movie-overview">{{ movie.overview }}</p>
+            <form action="{% url 'movies:add_to_watchlist' movie.id %}" method="post" class="ajax-form" style="margin-top: auto;">
+                <input type="hidden" name="title" value="{{ movie.title }}">
+                <input type="hidden" name="poster_path" value="{{ movie.poster_path|default_if_none:'' }}">
+                <button type="submit" class="btn-primary" style="width: 100%; font-size: 0.9rem; padding: 0.5rem;">+ Watchlist</button>
+            </form>
+        </div>
+    </div>
+    {% empty %}
+    <div class="empty-state">Unable to load recommendations right now.</div>
     {% endfor %}
-</ul>
+</div>
+{% endblock %}
