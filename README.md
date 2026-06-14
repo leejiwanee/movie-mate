@@ -1,43 +1,38 @@
-# 🎬 MovieMate
+# 🎬 MovieMate VIP
 
-MovieMate is a modern, premium Django-based web application that utilizes the TMDB API to discover trending movies, search for movies, and securely manage your personal Watchlist using MongoDB.
+MovieMate is a premium, modern Django-based web application designed to be the ultimate cinematic companion. Powered by the TMDB API and securely backed by MongoDB, it provides a visually stunning experience for discovering movies, tracking watch history, and sharing your cinematic journey.
 
-## ✨ Project Results & UI Showcase
+## ✨ Project Evolution & Premium Upgrades
 
-Here are the recent major upgrades applied to the project:
+MovieMate has been heavily upgraded to offer a **"SaaS VIP"** aesthetic. The entire platform features a Dark Space Theme with Glassmorphism, golden/emerald neon accents, and smooth micro-animations.
 
-- **Premium SaaS Aesthetic**: A sleek, modern user interface with soft drop shadows, glassmorphism navbars, and professional Indigo styling.
-- **AJAX & Toast Notifications**: Adding/removing movies happens instantly in the background without page reloads, displaying elegant sliding Toast popups.
-- **Personalized Accounts**: Full Authentication system where each user gets their own private Watchlist.
+### 🌟 New Major Features
 
-### 🏠 Homepage (Trending)
+- **🎰 Movie Roulette**: Can't decide what to watch? Spin the slot machine! The Roulette randomly selects a movie from your unwatched Watchlist (or trending movies if your list is empty) with thrilling CSS animations.
+- **📊 MovieMate Wrapped (Dashboard)**: A dedicated dashboard that calculates your total watch time, highest-rated genres, and movie count. It includes a beautiful "Year in Review" card format.
+- **📝 Movie Diary Timeline**: A personalized journal view. As you rate and review movies, they are displayed in a gorgeous, vertical zig-zag timeline sorted chronologically.
+- **🎬 Theater Mode**: No more tiny embedded trailers! Click "Watch Trailer", and the site dims into a full-screen, cinematic overlay with ambient lighting behind the video player.
+- **🎫 Instagram Ticket Generator**: With a click of a button, generate a sleek, personalized digital "Movie Ticket" (complete with a fake barcode and perforated edges). It automatically downloads as a 9:16 PNG image perfectly sized for sharing on Instagram Stories!
+- **📅 Upcoming Calendar**: A dedicated calendar page showing upcoming movie releases so you never miss a blockbuster.
 
-![Homepage Screenshot](screenshots/homepage.png)
+---
 
-### ⭐ My Watchlist
+## 📸 UI Showcase
 
-![Watchlist Screenshot](screenshots/watchlist.png)
+*Due to recent massive UI overhauls, the screenshots have been temporarily removed. Run the application locally to experience the new VIP Dark Theme!*
 
-### 🍿 Tonight's Picks
-
-![Tonight's Pick Screenshot](screenshots/tonights_pick.png)
-
-## 🌟 Features
-
-- **Secure Authentication:** Sign up, log in, and manage your private session.
-- **Trending Movies:** Check out the current most popular movies worldwide.
-- **Search Movies:** Search for your favorite movies across the vast TMDB database.
-- **Private Watchlist:** Save movies, view posters, mark them as "Watched/Unwatched", or remove them from your personal list.
-- **Tonight:** Get highly-rated movie recommendations instantly.
+---
 
 ## 🛠 Tech Stack
 
 - **Backend:** Python 3, Django 5.1
 - **Database:**
   - **SQLite:** For robust User Authentication & Sessions.
-  - **MongoDB:** (via `pymongo`) For fast, flexible Watchlist document storage.
+  - **MongoDB:** (via `pymongo`) For fast, flexible Watchlist document storage and Diary entries.
 - **API:** TMDB (The Movie Database) API
-- **Frontend:** Vanilla JS (`fetch` API), Custom Premium CSS (No external frameworks)
+- **Frontend:** HTML5, Vanilla JavaScript (`fetch` API, `html2canvas`), Custom Premium CSS (Glassmorphism, CSS Animations, no external CSS frameworks).
+
+---
 
 ## ⚙️ Getting Started
 
@@ -84,8 +79,10 @@ python manage.py runserver
 
 Navigate to `http://127.0.0.1:8000/` in your web browser.
 
+---
+
 ## 📂 Project Structure
 
 - `moviemate_prj/`: Main Django project configuration folder
 - `accounts/`: App handling User Authentication (Login, Register, Logout)
-- `movies/`: Core Django App handling trending, searching, AJAX views, and MongoDB integration
+- `movies/`: Core Django App handling all VIP features (Dashboard, Diary, Ticket Generation, Trending, Searching) and MongoDB integration.
