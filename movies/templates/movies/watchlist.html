@@ -3,6 +3,29 @@
 {% block content %}
 <h1 class="page-title">⭐ My Watchlist</h1>
 
+<!-- Control Bar -->
+<div style="background: var(--bg-card); padding: 1rem 1.5rem; border-radius: 12px; margin-bottom: 2rem; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+    <form method="get" id="filterSortForm" style="display: flex; gap: 1.5rem; width: 100%; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <label for="filter" style="font-weight: 600; color: var(--text-secondary);">Filter:</label>
+            <select name="filter" id="filter" onchange="document.getElementById('filterSortForm').submit()" style="padding: 0.5rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-light); color: var(--text-primary); outline: none; cursor: pointer; font-family: inherit;">
+                <option value="all" {% if current_filter == 'all' %}selected{% endif %}>All Movies</option>
+                <option value="watched" {% if current_filter == 'watched' %}selected{% endif %}>Watched</option>
+                <option value="unwatched" {% if current_filter == 'unwatched' %}selected{% endif %}>To Watch</option>
+            </select>
+        </div>
+        
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-left: auto;">
+            <label for="sort" style="font-weight: 600; color: var(--text-secondary);">Sort By:</label>
+            <select name="sort" id="sort" onchange="document.getElementById('filterSortForm').submit()" style="padding: 0.5rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-light); color: var(--text-primary); outline: none; cursor: pointer; font-family: inherit;">
+                <option value="newest" {% if current_sort == 'newest' %}selected{% endif %}>Newest Added</option>
+                <option value="rating" {% if current_sort == 'rating' %}selected{% endif %}>Highest Rated</option>
+                <option value="title" {% if current_sort == 'title' %}selected{% endif %}>Title (A-Z)</option>
+            </select>
+        </div>
+    </form>
+</div>
+
 <div class="movies-grid">
     {% for movie in movies %}
     <div class="movie-card">
