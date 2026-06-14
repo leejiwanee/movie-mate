@@ -1,0 +1,9 @@
+<h1>My Watchlist</h1>
+<a href="{% url 'movies:trending' %}">Home</a>
+<ul>
+    {% for movie in movies %}
+        <li>{{ movie.title }} - Watched: {{ movie.watched }}</li>
+    {% empty %}
+        <li>Watchlist is empty.</li>
+    {% endfor %}
+</ul>

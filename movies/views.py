@@ -1,21 +1,19 @@
-import requests
-from django.shortcuts import render
-from django.conf import settings
+from pymongo import MongoClient
+from django.http import JsonResponse, render
+from django.views.decorators.csrf import csrf_exempt
 
-BASE_URL = 'https://api.themoviedb.org/3'
+client = MongoClient('mongodb://localhost:27017/')
+db = client['moviemate_db']
+watchlist_collection = db['watchlist']
 
-def trending_movies(request):
-    url = f"{BASE_URL}/trending/movie/week?api_key={settings.TMDB_API_KEY}"
-    response = requests.get(url)
-    movies = response.json().get('results', [])
-    return render(request, 'movies/trending.html', {'movies': movies})
+@csrf_exempt
+def add_to_watchlist(request, movie_id):
+    if request.method == "POST":
+        title = request.POST.get('title', 'Unknown Title')
+        if not watchlist_collection.find_one({"movie_id": movie_id}):
+            watchlist_collection.insert_one({"movie_id": movie_id, "title": title, "watched": False})
+        return JsonResponse({"status": "success", "message": "Added to Watchlist"})
 
-def search_movies(request):
-    query = request.GET.get('q')
-    if not query:
-        return render(request, 'movies/search.html', {'error': 'Please type the keywords.'})
-    
-    url = f"{BASE_URL}/search/movie?api_key={settings.TMDB_API_KEY}&query={query}"
-    response = requests.get(url)
-    movies = response.json().get('results', [])
-    return render(request, 'movies/search.html', {'movies': movies, 'query': query})
+def get_watchlist(request):
+    movies = list(watchlist_collection.find({}, {'_id': 0}))
+    return render(request, 'movies/watchlist.html', {'movies': movies})
