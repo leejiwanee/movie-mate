@@ -1,0 +1,42 @@
+# =========================
+# 1. Environment Variables
+# =========================
+.env
+
+# =========================
+# 2. Virtual Environments
+# =========================
+venv/
+env/
+.venv/
+
+# =========================
+# 3. Python & Django Cache
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+
+# =========================
+# 4. Django Specific
+# =========================
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# =========================
+# 5. OS & IDE Generated Files
+# =========================
+# Mac OS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+
+# VSCode / PyCharm
+.vscode/
+.idea/
