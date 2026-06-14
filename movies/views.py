@@ -3,6 +3,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
 from django.conf import settings
+import requests
 
 # TMDB API 기본 주소 설정
 BASE_URL = 'https://api.themoviedb.org/3'
@@ -27,3 +28,18 @@ def what_should_i_watch(request):
     response = requests.get(url)
     recommendations = response.json().get('results', [])[:5] 
     return render(request, 'movies/tonight.html', {'movies': recommendations})
+
+def trending_movies(request):
+    url = f"{BASE_URL}/trending/movie/day?api_key={settings.TMDB_API_KEY}"
+    response = requests.get(url)
+    movies = response.json().get('results', [])
+    return render(request, 'movies/trending.html', {'movies': movies})
+
+def search_movies(request):
+    query = request.GET.get('q', '')
+    movies = []
+    if query:
+        url = f"{BASE_URL}/search/movie?api_key={settings.TMDB_API_KEY}&query={query}"
+        response = requests.get(url)
+        movies = response.json().get('results', [])
+    return render(request, 'movies/search.html', {'movies': movies, 'query': query})
