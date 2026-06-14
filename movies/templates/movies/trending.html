@@ -1,8 +1,153 @@
 {% extends "base.html" %}
-{% block title %}Trending Movies - MovieMate{% endblock %}
+{% block title %}Premium Home - MovieMate{% endblock %}
 {% block content %}
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
-    <h1 class="page-title" style="margin-bottom: 0;">🔥 Trending Movies</h1>
+<style>
+/* Dynamic Mysterious Banner CSS */
+.mysterious-banner {
+    position: relative;
+    width: 100%;
+    height: 50vh;
+    min-height: 400px;
+    margin-bottom: 4rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: white;
+}
+
+.mysterious-content {
+    position: relative;
+    z-index: 2;
+    padding: 2rem;
+}
+.mysterious-title {
+    font-size: 5rem;
+    font-weight: 900;
+    margin-bottom: 1rem;
+    background: linear-gradient(to right, #a855f7, #3b82f6, #f43f5e, #a855f7);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -2px;
+    animation: shine 4s linear infinite;
+    filter: drop-shadow(0 0 15px rgba(168, 85, 247, 0.4));
+}
+@keyframes shine {
+    to { background-position: 200% center; }
+}
+.mysterious-subtitle {
+    font-size: 1.3rem;
+    color: #e2e8f0;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    letter-spacing: 0.5px;
+}
+
+/* Top 10 Carousel */
+.carousel-container {
+    margin-bottom: 5rem;
+    position: relative;
+}
+.carousel-title {
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+}
+.carousel-scroll {
+    display: flex;
+    gap: 2.5rem;
+    overflow-x: auto;
+    padding-bottom: 2rem;
+    padding-top: 1rem;
+    padding-left: 2rem;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+}
+.carousel-scroll::-webkit-scrollbar {
+    height: 10px;
+}
+.carousel-scroll::-webkit-scrollbar-track {
+    background: var(--bg-light);
+    border-radius: 5px;
+}
+.carousel-scroll::-webkit-scrollbar-thumb {
+    background: var(--text-secondary);
+    border-radius: 5px;
+}
+.carousel-item {
+    flex: 0 0 240px;
+    position: relative;
+    scroll-snap-align: start;
+    transition: transform 0.3s ease;
+}
+.carousel-item:hover {
+    transform: translateY(-10px);
+}
+.carousel-poster {
+    width: 100%;
+    height: 360px;
+    border-radius: 12px;
+    object-fit: cover;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+}
+.rank-number {
+    position: absolute;
+    bottom: -25px;
+    left: -25px;
+    font-size: 9rem;
+    font-weight: 900;
+    color: #0f172a;
+    -webkit-text-stroke: 4px #e2e8f0;
+    line-height: 1;
+    z-index: 10;
+    text-shadow: 5px 5px 15px rgba(0,0,0,0.3);
+}
+body.dark-theme .rank-number {
+    color: #1e293b;
+    -webkit-text-stroke: 4px #4f46e5;
+}
+</style>
+
+<!-- Dynamic Mysterious Banner -->
+<div class="mysterious-banner">
+    <div class="mysterious-content">
+        <h1 class="mysterious-title">Dive Into The Unknown</h1>
+        <p class="mysterious-subtitle">Discover cinematic masterpieces, trending hits, and hidden gems perfectly curated for your taste.</p>
+    </div>
+</div>
+
+<!-- Search Form -->
+<form action="{% url 'movies:search' %}" method="get" class="search-form" style="margin-bottom: 4rem;">
+    <input type="text" name="q" placeholder="Search for your favorite movies..." class="search-input" required>
+    <button type="submit" class="btn-primary">Search</button>
+</form>
+
+<!-- Top 10 Carousel -->
+{% if top_10 %}
+<div class="carousel-container">
+    <h2 class="carousel-title">🏆 Top 10 Trending Today</h2>
+    <div class="carousel-scroll">
+        {% for movie in top_10 %}
+        <div class="carousel-item">
+            <a href="{% url 'movies:detail' movie.id %}" style="display: block; position: relative;">
+                <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" alt="{{ movie.title }}" class="carousel-poster">
+                <span class="rank-number">{{ forloop.counter }}</span>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Rest of Trending & Filtering -->
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+    <h2 class="carousel-title" style="margin-bottom: 0;">✨ Discover More</h2>
     
     <form method="get" id="sortForm">
         <div style="display: flex; align-items: center; gap: 0.5rem; background: var(--bg-card); padding: 0.5rem 1rem; border-radius: 12px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);">
@@ -16,11 +161,6 @@
         </div>
     </form>
 </div>
-
-<form action="{% url 'movies:search' %}" method="get" class="search-form">
-    <input type="text" name="q" placeholder="Search for your favorite movies..." class="search-input" required>
-    <button type="submit" class="btn-primary">Search</button>
-</form>
 
 <div class="movies-grid">
     {% for movie in movies %}

@@ -13,11 +13,17 @@
     <link rel="stylesheet" href="{% static 'css/styles.css' %}?v=2.0">
 </head>
 <body>
+    <!-- Global Background Orbs -->
+    <div class="background-orbs">
+        <div class="global-orb global-orb-1"></div>
+        <div class="global-orb global-orb-2"></div>
+        <div class="global-orb global-orb-3"></div>
+    </div>
+    
     <nav class="navbar">
         <div class="navbar-container">
             <a href="{% url 'movies:trending' %}" class="logo">🎬 MovieMate</a>
             <ul class="nav-links" style="align-items: center;">
-                <li><button id="theme-toggle" style="background:none; border:none; cursor:pointer; font-size:1.2rem; color:var(--text-secondary); transition: transform 0.2s;" aria-label="Toggle Dark Mode">🌙</button></li>
                 <li><a href="{% url 'movies:trending' %}">Home</a></li>
                 <li><a href="{% url 'movies:tonight' %}">Tonight's Picks</a></li>
                 {% if user.is_authenticated %}
@@ -102,27 +108,6 @@
                     }
                 });
             });
-        });
-
-        // Dark Mode Toggle Logic
-        const themeToggleBtn = document.getElementById('theme-toggle');
-        const body = document.body;
-        
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'dark') {
-            body.classList.add('dark-theme');
-            themeToggleBtn.textContent = '☀️';
-        }
-
-        themeToggleBtn.addEventListener('click', () => {
-            body.classList.toggle('dark-theme');
-            if (body.classList.contains('dark-theme')) {
-                localStorage.setItem('theme', 'dark');
-                themeToggleBtn.textContent = '☀️';
-            } else {
-                localStorage.setItem('theme', 'light');
-                themeToggleBtn.textContent = '🌙';
-            }
         });
     </script>
 </body>
