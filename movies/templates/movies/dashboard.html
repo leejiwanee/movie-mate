@@ -107,7 +107,7 @@
 </style>
 
 <div style="margin-bottom: 2rem;">
-    <h1 class="page-title" style="font-size: 2.5rem; margin-bottom: 0.5rem;">📊 Your Dashboard</h1>
+    <h1 class="page-title" style="font-size: 2.5rem; margin-bottom: 0.5rem;"> Your Dashboard</h1>
     <p style="color: var(--text-secondary); font-size: 1.2rem;">Welcome back, <strong>{{ request.user.username }}</strong>. Here are your movie stats.</p>
 </div>
 
@@ -136,6 +136,95 @@
 <div class="progress-container">
     <div class="progress-bar"></div>
     <div class="progress-text">{{ progress_percentage }}% Completed</div>
+</div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Genre Chart -->
+<h2 class="section-title">👔 Portfolio Analytics: Genre Distribution</h2>
+<div style="background: var(--bg-card); border-radius: 16px; padding: 2.5rem; border: 1px solid var(--border-color); margin-bottom: 4rem; box-shadow: var(--shadow-sm);">
+    {% if genre_labels_json != "[]" %}
+        <div style="width: 100%; max-width: 800px; margin: 0 auto;">
+            <canvas id="genreChart" height="150"></canvas>
+        </div>
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                const ctx = document.getElementById('genreChart').getContext('2d');
+                const labels = {{ genre_labels_json|safe }};
+                const data = {{ genre_data_json|safe }};
+                
+                // Create gradient for bars
+                const gradient = ctx.createLinearGradient(0, 0, 600, 0);
+                gradient.addColorStop(0, 'rgba(59, 130, 246, 0.7)');   // Subtle Blue
+                gradient.addColorStop(1, 'rgba(168, 85, 247, 0.7)');   // Subtle Purple
+                
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Movies',
+                            data: data,
+                            backgroundColor: gradient,
+                            borderRadius: 6,
+                            borderSkipped: false,
+                            barThickness: 24,
+                            hoverBackgroundColor: 'rgba(255, 255, 255, 0.9)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        indexAxis: 'y', // horizontal bar chart
+                        plugins: {
+                            legend: {
+                                display: false // Hide legend for cleaner minimalist look
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                                titleColor: '#f8fafc',
+                                bodyColor: '#cbd5e1',
+                                borderColor: 'rgba(255, 255, 255, 0.1)',
+                                borderWidth: 1,
+                                padding: 12,
+                                cornerRadius: 8
+                            }
+                        },
+                        scales: {
+                            x: {
+                                border: { display: false },
+                                grid: {
+                                    display: true,
+                                    color: 'rgba(255,255,255,0.05)',
+                                    drawTicks: false
+                                },
+                                ticks: {
+                                    color: '#64748b',
+                                    font: { family: 'Outfit', size: 12 },
+                                    stepSize: 1,
+                                    padding: 10
+                                }
+                            },
+                            y: {
+                                border: { display: false },
+                                grid: {
+                                    display: false,
+                                    drawTicks: false
+                                },
+                                ticks: {
+                                    color: '#f8fafc',
+                                    font: { family: 'Outfit', size: 14, weight: '500' },
+                                    padding: 15
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+        </script>
+    {% else %}
+        <p style="color: var(--text-secondary); text-align: center;">Add some movies to see your genre breakdown!</p>
+    {% endif %}
 </div>
 
 <!-- Top Rated Movies -->
