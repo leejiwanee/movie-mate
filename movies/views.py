@@ -89,8 +89,31 @@ def update_review(request, movie_id):
 
 @login_required(login_url='/accounts/login/')
 def get_watchlist(request):
-    movies = list(watchlist_collection.find({"user_id": request.user.id}, {'_id': 0}))
-    return render(request, 'movies/watchlist.html', {'movies': movies})
+    filter_type = request.GET.get('filter', 'all')
+    sort_type = request.GET.get('sort', 'newest')
+    
+    query = {"user_id": request.user.id}
+    
+    if filter_type == 'watched':
+        query['watched'] = True
+    elif filter_type == 'unwatched':
+        query['watched'] = False
+        
+    sort_logic = [('_id', -1)]
+    if sort_type == 'rating':
+        sort_logic = [('rating', -1), ('_id', -1)]
+    elif sort_type == 'title':
+        sort_logic = [('title', 1)]
+        
+    cursor = watchlist_collection.find(query, {'_id': 0}).sort(sort_logic)
+    movies = list(cursor)
+    
+    context = {
+        'movies': movies,
+        'current_filter': filter_type,
+        'current_sort': sort_type
+    }
+    return render(request, 'movies/watchlist.html', context)
 
 def what_should_i_watch(request):
     url = f"{BASE_URL}/discover/movie?api_key={settings.TMDB_API_KEY}&sort_by=popularity.desc&vote_average.gte=7.5"
@@ -99,10 +122,19 @@ def what_should_i_watch(request):
     return render(request, 'movies/tonight.html', {'movies': recommendations})
 
 def trending_movies(request):
-    url = f"{BASE_URL}/trending/movie/day?api_key={settings.TMDB_API_KEY}"
+    url = f"{BASE_URL}/trending/movie/week?api_key={settings.TMDB_API_KEY}"
     response = requests.get(url)
     movies = response.json().get('results', [])
-    return render(request, 'movies/trending.html', {'movies': movies})
+    
+    sort_type = request.GET.get('sort', 'trending')
+    if sort_type == 'rating':
+        movies.sort(key=lambda x: x.get('vote_average', 0), reverse=True)
+    elif sort_type == 'title':
+        movies.sort(key=lambda x: x.get('title', ''))
+    elif sort_type == 'newest':
+        movies.sort(key=lambda x: x.get('release_date', ''), reverse=True)
+        
+    return render(request, 'movies/trending.html', {'movies': movies, 'current_sort': sort_type})
 
 def search_movies(request):
     query = request.GET.get('q', '')
