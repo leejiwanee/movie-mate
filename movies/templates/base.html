@@ -19,7 +19,13 @@
             <ul class="nav-links">
                 <li><a href="{% url 'movies:trending' %}">Home</a></li>
                 <li><a href="{% url 'movies:tonight' %}">Tonight's Picks</a></li>
-                <li><a href="{% url 'movies:watchlist' %}">Watchlist</a></li>
+                {% if user.is_authenticated %}
+                    <li><a href="{% url 'movies:watchlist' %}">Watchlist</a></li>
+                    <li><a href="{% url 'accounts:logout' %}" style="color: var(--danger-color);">Logout ({{ user.username }})</a></li>
+                {% else %}
+                    <li><a href="{% url 'accounts:login' %}" style="color: var(--primary-color);">Sign In</a></li>
+                    <li><a href="{% url 'accounts:register' %}" class="btn-primary" style="padding: 0.4rem 1rem; color: white; border-radius: 9999px;">Sign Up</a></li>
+                {% endif %}
             </ul>
         </div>
     </nav>

@@ -2,6 +2,7 @@ from pymongo import MongoClient
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
 from django.conf import settings
 import requests
 import json
@@ -14,6 +15,9 @@ watchlist_collection = db['watchlist']
 
 @csrf_exempt
 def add_to_watchlist(request, movie_id):
+    if not request.user.is_authenticated:
+        return JsonResponse({"status": "error", "message": "Please log in to save movies."})
+
     if request.method == "POST":
         try:
             data = json.loads(request.body)
@@ -22,8 +26,9 @@ def add_to_watchlist(request, movie_id):
         title = data.get('title', 'Unknown Title')
         poster_path = data.get('poster_path', '')
         
-        if not watchlist_collection.find_one({"movie_id": movie_id}):
+        if not watchlist_collection.find_one({"movie_id": movie_id, "user_id": request.user.id}):
             watchlist_collection.insert_one({
+                "user_id": request.user.id,
                 "movie_id": movie_id, 
                 "title": title, 
                 "poster_path": poster_path,
@@ -34,24 +39,34 @@ def add_to_watchlist(request, movie_id):
 
 @csrf_exempt
 def remove_from_watchlist(request, movie_id):
+    if not request.user.is_authenticated:
+        return JsonResponse({"status": "error", "message": "Please log in first."})
+
     if request.method == "POST":
-        result = watchlist_collection.delete_one({"movie_id": movie_id})
+        result = watchlist_collection.delete_one({"movie_id": movie_id, "user_id": request.user.id})
         if result.deleted_count > 0:
             return JsonResponse({"status": "success", "message": "Removed from Watchlist!"})
         return JsonResponse({"status": "error", "message": "Movie not found in Watchlist."})
 
 @csrf_exempt
 def toggle_watched(request, movie_id):
+    if not request.user.is_authenticated:
+        return JsonResponse({"status": "error", "message": "Please log in first."})
+
     if request.method == "POST":
-        movie = watchlist_collection.find_one({"movie_id": movie_id})
+        movie = watchlist_collection.find_one({"movie_id": movie_id, "user_id": request.user.id})
         if movie:
             new_status = not movie.get('watched', False)
-            watchlist_collection.update_one({"movie_id": movie_id}, {"$set": {"watched": new_status}})
+            watchlist_collection.update_one(
+                {"movie_id": movie_id, "user_id": request.user.id}, 
+                {"$set": {"watched": new_status}}
+            )
             return JsonResponse({"status": "success", "message": "Watch status updated!", "watched": new_status})
         return JsonResponse({"status": "error", "message": "Movie not found."})
 
+@login_required(login_url='/accounts/login/')
 def get_watchlist(request):
-    movies = list(watchlist_collection.find({}, {'_id': 0}))
+    movies = list(watchlist_collection.find({"user_id": request.user.id}, {'_id': 0}))
     return render(request, 'movies/watchlist.html', {'movies': movies})
 
 def what_should_i_watch(request):
