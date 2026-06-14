@@ -1,0 +1,9 @@
+<h1>Search Results for "{{ query }}"</h1>
+<a href="{% url 'movies:trending' %}">Back to Trending</a>
+<ul>
+    {% for movie in movies %}
+        <li>{{ movie.title }} (Release: {{ movie.release_date }})</li>
+    {% empty %}
+        <li>No results found.</li>
+    {% endfor %}
+</ul>

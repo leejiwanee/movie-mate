@@ -1,0 +1,10 @@
+<h1>Trending Movies</h1>
+<form action="{% url 'movies:search' %}" method="get">
+    <input type="text" name="q" placeholder="Search movies...">
+    <button type="submit">Search</button>
+</form>
+<ul>
+    {% for movie in movies %}
+        <li>{{ movie.title }} (Rating: {{ movie.vote_average }})</li>
+    {% endfor %}
+</ul>
