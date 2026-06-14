@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.conf import settings
 import requests
 import json
+from collections import Counter
 
 # TMDB API 기본 주소 설정
 BASE_URL = 'https://api.themoviedb.org/3'
@@ -26,12 +27,23 @@ def add_to_watchlist(request, movie_id):
         title = data.get('title', 'Unknown Title')
         poster_path = data.get('poster_path', '')
         
+        genres = []
+        try:
+            url = f"{BASE_URL}/movie/{movie_id}?api_key={settings.TMDB_API_KEY}"
+            response = requests.get(url)
+            movie_data = response.json()
+            if 'genres' in movie_data:
+                genres = [g['name'] for g in movie_data['genres']]
+        except Exception:
+            pass
+            
         if not watchlist_collection.find_one({"movie_id": movie_id, "user_id": request.user.id}):
             watchlist_collection.insert_one({
                 "user_id": request.user.id,
                 "movie_id": movie_id, 
                 "title": title, 
                 "poster_path": poster_path,
+                "genres": genres,
                 "watched": False
             })
             return JsonResponse({"status": "success", "message": f"'{title}' added to Watchlist!"})
@@ -190,6 +202,16 @@ def dashboard(request):
     if total_count > 0:
         progress_percentage = int((watched_count / total_count) * 100)
         
+    genre_counter = Counter()
+    for m in watchlist_collection.find({"user_id": user_id}):
+        if 'genres' in m and m['genres']:
+            for g in m['genres']:
+                genre_counter[g] += 1
+                
+    top_genres = genre_counter.most_common(5)
+    genre_labels = [g[0] for g in top_genres]
+    genre_data = [g[1] for g in top_genres]
+        
     context = {
         'total_count': total_count,
         'watched_count': watched_count,
@@ -197,6 +219,8 @@ def dashboard(request):
         'average_rating': average_rating,
         'progress_percentage': progress_percentage,
         'top_rated': top_rated,
-        'recently_added': recently_added
+        'recently_added': recently_added,
+        'genre_labels_json': json.dumps(genre_labels),
+        'genre_data_json': json.dumps(genre_data)
     }
     return render(request, 'movies/dashboard.html', context)
