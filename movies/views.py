@@ -89,3 +89,14 @@ def search_movies(request):
         response = requests.get(url)
         movies = response.json().get('results', [])
     return render(request, 'movies/search.html', {'movies': movies, 'query': query})
+
+def movie_detail(request, movie_id):
+    url = f"{BASE_URL}/movie/{movie_id}?api_key={settings.TMDB_API_KEY}&append_to_response=credits,videos,similar"
+    response = requests.get(url)
+    movie = response.json()
+    
+    in_watchlist = False
+    if request.user.is_authenticated:
+        in_watchlist = watchlist_collection.find_one({"movie_id": movie_id, "user_id": request.user.id}) is not None
+        
+    return render(request, 'movies/detail.html', {'movie': movie, 'in_watchlist': in_watchlist})

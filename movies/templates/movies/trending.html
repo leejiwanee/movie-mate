@@ -12,12 +12,18 @@
     {% for movie in movies %}
     <div class="movie-card">
         {% if movie.poster_path %}
-            <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" alt="{{ movie.title }}" class="movie-poster">
+            <a href="{% url 'movies:detail' movie.id %}">
+                <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" alt="{{ movie.title }}" class="movie-poster">
+            </a>
         {% else %}
-            <div class="movie-poster" style="display: flex; align-items: center; justify-content: center; color: var(--text-secondary);">No Image</div>
+            <a href="{% url 'movies:detail' movie.id %}">
+                <div class="movie-poster" style="display: flex; align-items: center; justify-content: center; color: var(--text-secondary);">No Image</div>
+            </a>
         {% endif %}
         <div class="movie-info">
-            <h2 class="movie-title">{{ movie.title }}</h2>
+            <a href="{% url 'movies:detail' movie.id %}" style="text-decoration: none;">
+                <h2 class="movie-title">{{ movie.title }}</h2>
+            </a>
             <div class="movie-meta">
                 <span>{{ movie.release_date|slice:":4" }}</span>
                 <span class="rating">⭐ {{ movie.vote_average|floatformat:1 }}</span>
