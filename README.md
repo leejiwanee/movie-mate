@@ -8,9 +8,14 @@ Here are the recent major upgrades applied to the project:
 - **AJAX & Toast Notifications**: Adding/removing movies happens instantly in the background without page reloads, displaying elegant sliding Toast popups.
 - **Personalized Accounts**: Full Authentication system where each user gets their own private Watchlist.
 
-*(You can add your own screenshots here! For example:)*
-> ![Home Page Screenshot](/path/to/your/screenshot.png)
-> ![Watchlist with Toasts](/path/to/your/screenshot2.png)
+### 🏠 Homepage (Trending)
+![Homepage Screenshot](screenshots/homepage.png)
+
+### ⭐ My Watchlist
+![Watchlist Screenshot](screenshots/watchlist.png)
+
+### 🍿 Tonight's Picks
+![Tonight's Pick Screenshot](screenshots/tonights_pick.png)
 
 ## 🌟 Features
 
