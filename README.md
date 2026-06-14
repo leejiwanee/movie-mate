@@ -1,4 +1,4 @@
-# 🎬 MovieMate VIP
+# 🎬 MovieMate
 
 MovieMate is a premium, modern Django-based web application designed to be the ultimate cinematic companion. Powered by the TMDB API and securely backed by MongoDB, it provides a visually stunning experience for discovering movies, tracking watch history, and sharing your cinematic journey.
 
@@ -8,18 +8,40 @@ MovieMate has been heavily upgraded to offer a **"SaaS VIP"** aesthetic. The ent
 
 ### 🌟 New Major Features
 
-- **🎰 Movie Roulette**: Can't decide what to watch? Spin the slot machine! The Roulette randomly selects a movie from your unwatched Watchlist (or trending movies if your list is empty) with thrilling CSS animations.
-- **📊 MovieMate Wrapped (Dashboard)**: A dedicated dashboard that calculates your total watch time, highest-rated genres, and movie count. It includes a beautiful "Year in Review" card format.
-- **📝 Movie Diary Timeline**: A personalized journal view. As you rate and review movies, they are displayed in a gorgeous, vertical zig-zag timeline sorted chronologically.
-- **🎬 Theater Mode**: No more tiny embedded trailers! Click "Watch Trailer", and the site dims into a full-screen, cinematic overlay with ambient lighting behind the video player.
-- **🎫 Instagram Ticket Generator**: With a click of a button, generate a sleek, personalized digital "Movie Ticket" (complete with a fake barcode and perforated edges). It automatically downloads as a 9:16 PNG image perfectly sized for sharing on Instagram Stories!
-- **📅 Upcoming Calendar**: A dedicated calendar page showing upcoming movie releases so you never miss a blockbuster.
+- **Movie Roulette**: Can't decide what to watch? Spin the slot machine! The Roulette randomly selects a movie from your unwatched Watchlist (or trending movies if your list is empty) with thrilling CSS animations.
+- **MovieMate Wrapped (Dashboard)**: A dedicated dashboard that calculates your total watch time, highest-rated genres, and movie count. It includes a beautiful "Year in Review" card format.
+- **Movie Diary Timeline**: A personalized journal view. As you rate and review movies, they are displayed in a gorgeous, vertical zig-zag timeline sorted chronologically.
+- **Theater Mode**: No more tiny embedded trailers! Click "Watch Trailer", and the site dims into a full-screen, cinematic overlay with ambient lighting behind the video player.
+- **Instagram Ticket Generator**: With a click of a button, generate a sleek, personalized digital "Movie Ticket" (complete with a fake barcode and perforated edges). It automatically downloads as a 9:16 PNG image perfectly sized for sharing on Instagram Stories!
+- **Upcoming Calendar**: A dedicated calendar page showing upcoming movie releases so you never miss a blockbuster.
 
 ---
 
-## 📸 UI Showcase
+## UI Showcase
 
-*Due to recent massive UI overhauls, the screenshots have been temporarily removed. Run the application locally to experience the new VIP Dark Theme!*
+### 🏠 Homepage
+
+![Homepage](screenshots/homepage.png)
+
+### 🎰 Movie Roulette
+
+![Movie Roulette](screenshots/roulette.png)
+
+### 📅 Coming Soon
+
+![Coming Soon](screenshots/coming_soon.png)
+
+### 🎬 Movie Overview (Detail & Ticket)
+
+![Movie Overview](screenshots/movie_overview.png)
+
+### 📊 Dashboard (Wrapped)
+
+![Dashboard](screenshots/dashboard.png)
+
+### ⭐ My Watchlist
+
+![Watchlist](screenshots/watchlist.png)
 
 ---
 
