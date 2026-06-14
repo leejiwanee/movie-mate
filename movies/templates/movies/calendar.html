@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+{% block title %}Upcoming Releases - MovieMate{% endblock %}
+{% block content %}
+<style>
+.timeline {
+    position: relative;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem 0;
+}
+/* The vertical line */
+.timeline::after {
+    content: '';
+    position: absolute;
+    width: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    top: 0;
+    bottom: 0;
+    left: 100px;
+    border-radius: 2px;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 4rem;
+    display: flex;
+    gap: 3rem;
+    align-items: flex-start;
+}
+
+/* Date Badge */
+.date-badge {
+    flex: 0 0 100px;
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(251, 191, 36, 0.5);
+    border-radius: 12px;
+    padding: 0.8rem 0;
+    text-align: center;
+    box-shadow: 0 0 15px rgba(251, 191, 36, 0.2);
+    z-index: 2;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.date-month {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #fbbf24;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 0.2rem;
+}
+
+.date-day {
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: white;
+    line-height: 1;
+}
+
+.date-year {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 0.3rem;
+}
+
+/* Movie Card in Timeline */
+.timeline-content {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 1.5rem;
+    display: flex;
+    gap: 1.5rem;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+}
+
+.timeline-content:hover {
+    transform: translateX(10px);
+    border-color: rgba(251, 191, 36, 0.4);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.timeline-poster {
+    width: 150px;
+    height: 225px;
+    border-radius: 12px;
+    object-fit: cover;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.timeline-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.timeline-title {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 0.5rem;
+}
+
+.timeline-overview {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+@media (max-width: 768px) {
+    .timeline::after {
+        left: 30px;
+    }
+    .timeline-item {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    .date-badge {
+        flex-direction: row;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+    }
+    .date-day { font-size: 1.5rem; }
+    .timeline-content {
+        flex-direction: column;
+    }
+    .timeline-poster {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 2/3;
+    }
+}
+</style>
+
+<div class="page-header" style="text-align: center; margin-bottom: 4rem;">
+    <h1 style="font-size: 3.5rem; font-weight: 900; background: linear-gradient(to right, #fbbf24, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 1rem;">📆 Upcoming Releases</h1>
+    <p style="font-size: 1.2rem; color: var(--text-secondary);">Mark your calendars. The most anticipated movies are arriving soon.</p>
+</div>
+
+<div class="timeline">
+    {% for movie in movies %}
+    <div class="timeline-item">
+        <div class="date-badge">
+            <span class="date-month">{{ movie.release_month }}</span>
+            <span class="date-day">{{ movie.release_day }}</span>
+            <span class="date-year">{{ movie.release_year }}</span>
+        </div>
+        
+        <div class="timeline-content">
+            {% if movie.poster_path %}
+                <a href="{% url 'movies:detail' movie.id %}">
+                    <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" alt="{{ movie.title }}" class="timeline-poster">
+                </a>
+            {% else %}
+                <div class="timeline-poster" style="display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); color: var(--text-secondary);">No Image</div>
+            {% endif %}
+            
+            <div class="timeline-info">
+                <a href="{% url 'movies:detail' movie.id %}" style="text-decoration: none;">
+                    <h2 class="timeline-title">{{ movie.title }}</h2>
+                </a>
+                
+                <p class="timeline-overview">{{ movie.overview|default:"No overview available yet." }}</p>
+                
+                <div style="margin-top: auto; display: flex; gap: 1rem;">
+                    <form action="{% url 'movies:add_to_watchlist' movie.id %}" method="post" class="ajax-form" style="width: 200px;">
+                        <input type="hidden" name="title" value="{{ movie.title }}">
+                        <input type="hidden" name="poster_path" value="{{ movie.poster_path|default_if_none:'' }}">
+                        <button type="submit" class="btn-primary" style="width: 100%; padding: 0.8rem; font-size: 1rem;">+ Add to Watchlist</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div style="text-align: center; color: var(--text-secondary); padding: 4rem;">
+        <h2>No upcoming movies found.</h2>
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}

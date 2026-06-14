@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% block title %}My Movie Diary - MovieMate{% endblock %}
+{% block content %}
+<style>
+.diary-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem 0;
+    position: relative;
+}
+
+/* Vertical Timeline Line */
+.diary-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateX(-50%);
+    border-radius: 2px;
+}
+
+.diary-entry {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4rem;
+    position: relative;
+    width: 100%;
+}
+
+.diary-entry:nth-child(even) {
+    flex-direction: row-reverse;
+}
+
+.diary-card {
+    width: 45%;
+    background: rgba(30, 41, 59, 0.7);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    backdrop-filter: blur(10px);
+    display: flex;
+    gap: 1.5rem;
+    transition: transform 0.3s, border-color 0.3s;
+}
+
+.diary-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(251, 191, 36, 0.4);
+}
+
+.diary-poster {
+    width: 120px;
+    height: 180px;
+    border-radius: 10px;
+    object-fit: cover;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.diary-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Timeline Dot */
+.timeline-dot {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 24px;
+    height: 24px;
+    background: #fbbf24;
+    border-radius: 50%;
+    box-shadow: 0 0 20px rgba(251, 191, 36, 0.6);
+    z-index: 2;
+    border: 4px solid #0f172a;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .diary-container::before {
+        left: 30px;
+    }
+    .diary-entry {
+        flex-direction: row !important;
+        justify-content: flex-start;
+        padding-left: 60px;
+    }
+    .timeline-dot {
+        left: 30px;
+    }
+    .diary-card {
+        width: 100%;
+    }
+}
+</style>
+
+<div class="page-header" style="text-align: center; margin-bottom: 4rem;">
+    <h1 style="font-size: 3rem; font-weight: 900; color: white; margin-bottom: 0.5rem;">📝 Movie Diary</h1>
+    <p style="color: var(--text-secondary); font-size: 1.1rem;">A chronological timeline of your cinematic journey.</p>
+</div>
+
+<div class="diary-container">
+    {% for entry in diary_entries %}
+    <div class="diary-entry">
+        <div class="timeline-dot"></div>
+        <div class="diary-card">
+            <a href="{% url 'movies:detail' entry.movie_id %}">
+                {% if entry.poster_path %}
+                    <img src="https://image.tmdb.org/t/p/w500{{ entry.poster_path }}" class="diary-poster" alt="{{ entry.title }}">
+                {% else %}
+                    <div class="diary-poster" style="background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;">No Image</div>
+                {% endif %}
+            </a>
+            <div class="diary-info">
+                <a href="{% url 'movies:detail' entry.movie_id %}" style="text-decoration: none; color: white;">
+                    <h3 style="font-size: 1.4rem; font-weight: 800; margin-bottom: 0.5rem;">{{ entry.title }}</h3>
+                </a>
+                
+                <div style="margin-bottom: 1rem;">
+                    {% if entry.rating %}
+                        <span style="background: rgba(251, 191, 36, 0.1); color: #fbbf24; padding: 0.3rem 0.8rem; border-radius: 6px; font-weight: 700; font-size: 0.95rem;">⭐ {{ entry.rating }} / 5</span>
+                    {% else %}
+                        <span style="background: rgba(255, 255, 255, 0.05); color: var(--text-secondary); padding: 0.3rem 0.8rem; border-radius: 6px; font-size: 0.9rem;">No Rating</span>
+                    {% endif %}
+                </div>
+
+                <div style="background: rgba(0,0,0,0.3); padding: 1.2rem; border-radius: 8px; border-left: 4px solid #fbbf24; font-size: 1rem; color: #cbd5e1; font-style: italic; line-height: 1.6; flex: 1;">
+                    {% if entry.review_text %}
+                        "{{ entry.review_text }}"
+                    {% else %}
+                        <span style="color: #64748b;">No review written.</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Empty space for the other side -->
+        <div style="width: 45%;"></div>
+    </div>
+    {% empty %}
+    <div style="text-align: center; color: var(--text-secondary); padding: 3rem;">
+        <h2 style="font-weight: 600; font-size: 1.5rem; margin-bottom: 1rem;">Your diary is completely empty.</h2>
+        <p>Go to your Watchlist, mark some movies as watched, and leave a review to start your timeline!</p>
+        <a href="{% url 'movies:watchlist' %}" class="btn-primary" style="display: inline-block; margin-top: 1.5rem; text-decoration: none;">Go to Watchlist</a>
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}
