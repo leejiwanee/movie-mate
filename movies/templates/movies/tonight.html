@@ -1,0 +1,9 @@
+<h1>What Should I Watch Tonight?</h1>
+<a href="{% url 'movies:trending' %}">Home</a>
+<p>Here are our top 5 picks for you:</p>
+<ul>
+    {% for movie in movies %}
+        <li><strong>{{ movie.title }}</strong> (Rating: {{ movie.vote_average }})<br>
+        <small>{{ movie.overview }}</small></li>
+    {% endfor %}
+</ul>
