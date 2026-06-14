@@ -159,6 +159,31 @@ body {
     box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
 }
 
+.btn-secondary {
+    background-color: #f1f5f9;
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+    background-color: #e2e8f0;
+}
+
+body.dark-theme .btn-secondary {
+    background-color: #334155;
+    color: #f8fafc;
+    border-color: #475569;
+}
+
+body.dark-theme .btn-secondary:hover {
+    background-color: #475569;
+}
+
 .btn-danger {
     background-color: #fff;
     color: var(--danger-color);

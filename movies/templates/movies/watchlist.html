@@ -45,7 +45,9 @@
                     {% if movie.rating %}Edit Review{% else %}⭐ Leave Review{% endif %}
                 </button>
                 <form action="{% url 'movies:toggle_watched' movie.movie_id %}" method="post" class="ajax-form" style="flex: 1;">
-                    <button type="submit" class="btn-secondary" style="width: 100%; padding: 0.6rem;">Toggle</button>
+                    <button type="submit" class="btn-secondary" style="width: 100%; padding: 0.6rem;">
+                        {% if movie.watched %}Mark Unwatched{% else %}Mark Watched{% endif %}
+                    </button>
                 </form>
                 <form action="{% url 'movies:remove_from_watchlist' movie.movie_id %}" method="post" class="ajax-form" style="flex: 1;">
                     <button type="submit" class="btn-danger" style="width: 100%; padding: 0.6rem;">Remove</button>
