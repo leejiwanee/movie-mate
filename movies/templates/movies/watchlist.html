@@ -19,29 +19,95 @@
             <a href="{% url 'movies:detail' movie.movie_id %}" style="text-decoration: none;">
                 <h2 class="movie-title">{{ movie.title }}</h2>
             </a>
-            <div class="movie-meta" style="margin-bottom: 1.5rem;">
+            <div class="movie-meta" style="margin-bottom: 0.5rem;">
                 <span>Status:</span>
                 {% if movie.watched %}
-                    <span style="color: var(--success-color); font-weight: 700;">✅ Watched</span>
+                    <span style="color: #10b981; font-weight: 600;">✅ Watched</span>
                 {% else %}
-                    <span style="color: var(--text-secondary); font-weight: 700;">👀 To Watch</span>
+                    <span style="color: #f59e0b; font-weight: 600;">⏳ To Watch</span>
                 {% endif %}
             </div>
+
+            <!-- Review Display -->
+            {% if movie.rating %}
+                <div style="margin-bottom: 0.5rem; color: #fde047; font-size: 1.2rem; letter-spacing: 2px;">
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= movie.rating %}★{% else %}☆{% endif %}
+                    {% endfor %}
+                </div>
+            {% endif %}
+            {% if movie.review_text %}
+                <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem; font-style: italic; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">"{{ movie.review_text }}"</p>
+            {% endif %}
             
-            <div class="card-actions">
+            <div style="display: flex; gap: 0.5rem; margin-top: auto; flex-wrap: wrap;">
+                <button type="button" class="btn-primary" style="width: 100%; padding: 0.6rem; margin-bottom: 0.5rem;" onclick="openReviewModal('{{ movie.movie_id }}', '{{ movie.title|escapejs }}', '{{ movie.rating|default:0 }}', '{{ movie.review_text|escapejs|default:'' }}')">
+                    {% if movie.rating %}Edit Review{% else %}⭐ Leave Review{% endif %}
+                </button>
                 <form action="{% url 'movies:toggle_watched' movie.movie_id %}" method="post" class="ajax-form" style="flex: 1;">
-                    <button type="submit" class="btn-success" style="width: 100%;">
-                        {% if movie.watched %}Mark Unwatched{% else %}Mark Watched{% endif %}
-                    </button>
+                    <button type="submit" class="btn-secondary" style="width: 100%; padding: 0.6rem;">Toggle</button>
                 </form>
                 <form action="{% url 'movies:remove_from_watchlist' movie.movie_id %}" method="post" class="ajax-form" style="flex: 1;">
-                    <button type="submit" class="btn-danger" style="width: 100%;">Remove</button>
+                    <button type="submit" class="btn-danger" style="width: 100%; padding: 0.6rem;">Remove</button>
                 </form>
             </div>
         </div>
     </div>
     {% empty %}
-    <div class="empty-state">Your watchlist is empty. Discover movies on the Trending page!</div>
+    <div class="empty-state">
+        <h2 style="margin-bottom: 1rem; color: var(--text-primary);">Your Watchlist is Empty 😢</h2>
+        <p>Go to Trending or Search to add some movies you'd like to watch!</p>
+    </div>
     {% endfor %}
 </div>
+
+<!-- Review Modal -->
+<div id="reviewModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalMovieTitle" style="font-size: 1.5rem; color: var(--text-primary);">Leave a Review</h2>
+            <button class="modal-close" onclick="closeReviewModal()">&times;</button>
+        </div>
+        <form id="reviewForm" action="" method="post" class="ajax-form">
+            <div class="star-rating">
+                <input type="radio" id="star5" name="rating" value="5" /><label for="star5" title="5 stars">★</label>
+                <input type="radio" id="star4" name="rating" value="4" /><label for="star4" title="4 stars">★</label>
+                <input type="radio" id="star3" name="rating" value="3" /><label for="star3" title="3 stars">★</label>
+                <input type="radio" id="star2" name="rating" value="2" /><label for="star2" title="2 stars">★</label>
+                <input type="radio" id="star1" name="rating" value="1" /><label for="star1" title="1 star">★</label>
+            </div>
+            <textarea name="review_text" id="reviewText" class="review-textarea" placeholder="Write your thoughts about this movie..."></textarea>
+            <button type="submit" class="btn-primary" style="width: 100%; padding: 1rem; font-size: 1.1rem;">Save Review</button>
+        </form>
+    </div>
+</div>
+
+<script>
+function openReviewModal(movieId, title, currentRating, currentText) {
+    const modal = document.getElementById('reviewModal');
+    const form = document.getElementById('reviewForm');
+    const titleEl = document.getElementById('modalMovieTitle');
+    const textArea = document.getElementById('reviewText');
+
+    titleEl.textContent = 'Review: ' + title;
+    form.action = `/movies/watchlist/review/${movieId}/`;
+    textArea.value = currentText;
+
+    document.querySelectorAll('.star-rating input').forEach(input => input.checked = false);
+    if (currentRating > 0) {
+        const star = document.getElementById(`star${currentRating}`);
+        if (star) star.checked = true;
+    }
+
+    modal.classList.add('active');
+}
+
+function closeReviewModal() {
+    document.getElementById('reviewModal').classList.remove('active');
+}
+
+document.getElementById('reviewModal').addEventListener('click', function(e) {
+    if (e.target === this) closeReviewModal();
+});
+</script>
 {% endblock %}

@@ -64,6 +64,29 @@ def toggle_watched(request, movie_id):
             return JsonResponse({"status": "success", "message": "Watch status updated!", "watched": new_status})
         return JsonResponse({"status": "error", "message": "Movie not found."})
 
+@csrf_exempt
+def update_review(request, movie_id):
+    if not request.user.is_authenticated:
+        return JsonResponse({"status": "error", "message": "Please log in first."})
+
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            data = request.POST
+            
+        rating = int(data.get('rating', 0))
+        review_text = data.get('review_text', '').strip()
+        
+        movie = watchlist_collection.find_one({"movie_id": movie_id, "user_id": request.user.id})
+        if movie:
+            watchlist_collection.update_one(
+                {"movie_id": movie_id, "user_id": request.user.id}, 
+                {"$set": {"rating": rating, "review_text": review_text}}
+            )
+            return JsonResponse({"status": "success", "message": "Review saved successfully!"})
+        return JsonResponse({"status": "error", "message": "Movie not found in Watchlist."})
+
 @login_required(login_url='/accounts/login/')
 def get_watchlist(request):
     movies = list(watchlist_collection.find({"user_id": request.user.id}, {'_id': 0}))
