@@ -166,3 +166,37 @@ def movie_detail(request, movie_id):
         in_watchlist = watchlist_collection.find_one({"movie_id": movie_id, "user_id": request.user.id}) is not None
         
     return render(request, 'movies/detail.html', {'movie': movie, 'in_watchlist': in_watchlist})
+
+@login_required(login_url='/accounts/login/')
+def dashboard(request):
+    user_id = request.user.id
+    
+    total_count = watchlist_collection.count_documents({"user_id": user_id})
+    watched_count = watchlist_collection.count_documents({"user_id": user_id, "watched": True})
+    unwatched_count = total_count - watched_count
+    
+    rated_movies = list(watchlist_collection.find({"user_id": user_id, "rating": {"$gt": 0}}, {"rating": 1, "_id": 0}))
+    average_rating = 0
+    if rated_movies:
+        average_rating = sum([m.get('rating', 0) for m in rated_movies]) / len(rated_movies)
+        
+    top_rated_cursor = watchlist_collection.find({"user_id": user_id, "rating": {"$gt": 0}}).sort("rating", -1).limit(5)
+    top_rated = list(top_rated_cursor)
+    
+    recent_cursor = watchlist_collection.find({"user_id": user_id}).sort("_id", -1).limit(5)
+    recently_added = list(recent_cursor)
+    
+    progress_percentage = 0
+    if total_count > 0:
+        progress_percentage = int((watched_count / total_count) * 100)
+        
+    context = {
+        'total_count': total_count,
+        'watched_count': watched_count,
+        'unwatched_count': unwatched_count,
+        'average_rating': average_rating,
+        'progress_percentage': progress_percentage,
+        'top_rated': top_rated,
+        'recently_added': recently_added
+    }
+    return render(request, 'movies/dashboard.html', context)

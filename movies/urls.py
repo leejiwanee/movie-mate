@@ -11,5 +11,6 @@ urlpatterns = [
     path('watchlist/toggle/<int:movie_id>/', views.toggle_watched, name='toggle_watched'),
     path('watchlist/review/<int:movie_id>/', views.update_review, name='update_review'),
     path('tonight/', views.what_should_i_watch, name='tonight'),
+    path('dashboard/', views.dashboard, name='dashboard'),
     path('movie/<int:movie_id>/', views.movie_detail, name='detail'),
 ]

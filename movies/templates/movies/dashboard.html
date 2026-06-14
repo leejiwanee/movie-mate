@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - MovieMate{% endblock %}
+{% block content %}
+
+<style>
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.stat-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s;
+}
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-title {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.stat-value {
+    font-size: 3.5rem;
+    font-weight: 900;
+    background: linear-gradient(to right, #a855f7, #3b82f6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1.2;
+}
+
+.progress-container {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 9999px;
+    height: 1.5rem;
+    width: 100%;
+    margin-bottom: 4rem;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(to right, #3b82f6, #10b981);
+    width: {{ progress_percentage }}%;
+    border-radius: 9999px;
+    transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.progress-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: white;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+}
+
+.section-title {
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+}
+
+.horizontal-list {
+    display: flex;
+    gap: 1.5rem;
+    overflow-x: auto;
+    padding-bottom: 2rem;
+    padding-top: 1rem;
+    padding-left: 1rem;
+    scroll-snap-type: x mandatory;
+    margin-bottom: 2rem;
+}
+.horizontal-list::-webkit-scrollbar {
+    height: 8px;
+}
+.horizontal-list::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.1);
+    border-radius: 4px;
+}
+.horizontal-list::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 4px;
+}
+
+.mini-card {
+    flex: 0 0 180px;
+    scroll-snap-align: start;
+}
+</style>
+
+<div style="margin-bottom: 2rem;">
+    <h1 class="page-title" style="font-size: 2.5rem; margin-bottom: 0.5rem;">📊 Your Dashboard</h1>
+    <p style="color: var(--text-secondary); font-size: 1.2rem;">Welcome back, <strong>{{ request.user.username }}</strong>. Here are your movie stats.</p>
+</div>
+
+<!-- Stats Grid -->
+<div class="dashboard-grid">
+    <div class="stat-card">
+        <div class="stat-title">Total Movies</div>
+        <div class="stat-value">{{ total_count }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-title">Watched</div>
+        <div class="stat-value">{{ watched_count }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-title">Unwatched</div>
+        <div class="stat-value">{{ unwatched_count }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-title">Avg Rating</div>
+        <div class="stat-value">{{ average_rating|floatformat:1 }}</div>
+    </div>
+</div>
+
+<!-- Progress Bar -->
+<h2 class="section-title">Watchlist Progress</h2>
+<div class="progress-container">
+    <div class="progress-bar"></div>
+    <div class="progress-text">{{ progress_percentage }}% Completed</div>
+</div>
+
+<!-- Top Rated Movies -->
+<h2 class="section-title">⭐ Your Top Rated Movies</h2>
+{% if top_rated %}
+<div class="horizontal-list">
+    {% for movie in top_rated %}
+    <div class="mini-card movie-card">
+        <a href="{% url 'movies:detail' movie.movie_id %}" style="text-decoration: none;">
+            {% if movie.poster_path %}
+                <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" alt="{{ movie.title }}" class="movie-poster" style="height: 270px;">
+            {% else %}
+                <div class="movie-poster" style="height: 270px; display: flex; align-items: center; justify-content: center; color: var(--text-secondary);">No Image</div>
+            {% endif %}
+            <div style="padding: 1rem; text-align: center;">
+                <h3 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ movie.title }}</h3>
+                <div style="color: var(--text-secondary); font-weight: 600;">Rating: <span style="color: #fbbf24;">{{ movie.rating }} / 5</span></div>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<p style="color: var(--text-secondary); margin-bottom: 4rem;">You haven't rated any movies yet. Go watch and rate some!</p>
+{% endif %}
+
+<!-- Recently Added -->
+<h2 class="section-title">🕒 Recently Added</h2>
+{% if recently_added %}
+<div class="horizontal-list">
+    {% for movie in recently_added %}
+    <div class="mini-card movie-card">
+        <a href="{% url 'movies:detail' movie.movie_id %}" style="text-decoration: none;">
+            {% if movie.poster_path %}
+                <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" alt="{{ movie.title }}" class="movie-poster" style="height: 270px;">
+            {% else %}
+                <div class="movie-poster" style="height: 270px; display: flex; align-items: center; justify-content: center; color: var(--text-secondary);">No Image</div>
+            {% endif %}
+            <div style="padding: 1rem; text-align: center;">
+                <h3 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ movie.title }}</h3>
+                {% if movie.watched %}
+                    <span style="font-size: 0.8rem; background: rgba(16,185,129,0.2); color: #10b981; border: 1px solid rgba(16,185,129,0.5); padding: 0.2rem 0.6rem; border-radius: 4px;">Watched</span>
+                {% else %}
+                    <span style="font-size: 0.8rem; background: rgba(239,68,68,0.2); color: #ef4444; border: 1px solid rgba(239,68,68,0.5); padding: 0.2rem 0.6rem; border-radius: 4px;">Unwatched</span>
+                {% endif %}
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<p style="color: var(--text-secondary);">Your watchlist is empty.</p>
+{% endif %}
+
+{% endblock %}
