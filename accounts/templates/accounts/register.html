@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Sign Up - MovieMate{% endblock %}
+{% block content %}
+<div style="max-width: 450px; margin: 4rem auto; background: var(--bg-card); padding: 2.5rem; border-radius: 16px; box-shadow: var(--shadow-md); border: 1px solid var(--border-color);">
+    <h1 class="page-title" style="text-align: center; border: none; margin-bottom: 1rem;">Create an Account</h1>
+    <p style="text-align: center; color: var(--text-secondary); margin-bottom: 2rem;">Join MovieMate to save your favorite movies.</p>
+
+    <form method="post" action="{% url 'accounts:register' %}">
+        {% csrf_token %}
+        <div style="display: flex; flex-direction: column; gap: 1.5rem; margin-bottom: 2rem;">
+            {% for field in form %}
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <label for="{{ field.id_for_label }}" style="font-weight: 600; font-size: 0.9rem;">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <span style="color: var(--text-secondary); font-size: 0.8rem;">{{ field.help_text|safe }}</span>
+                    {% endif %}
+                    {% if field.errors %}
+                        <span style="color: var(--danger-color); font-size: 0.85rem;">{{ field.errors|striptags }}</span>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            {% if form.non_field_errors %}
+                <div style="color: var(--danger-color); font-size: 0.85rem; padding: 0.5rem; background: #fee2e2; border-radius: 4px;">
+                    {{ form.non_field_errors|striptags }}
+                </div>
+            {% endif %}
+        </div>
+        <button type="submit" class="btn-primary" style="width: 100%;">Sign Up</button>
+    </form>
+    
+    <p style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-secondary);">
+        Already have an account? <a href="{% url 'accounts:login' %}" style="color: var(--primary-color); font-weight: 600; text-decoration: none;">Sign In</a>
+    </p>
+</div>
+
+<!-- Styling for Django form fields -->
+<style>
+    form input[type="text"],
+    form input[type="password"] {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 1rem;
+        outline: none;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    form input[type="text"]:focus,
+    form input[type="password"]:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+    }
+    form ul {
+        list-style: none;
+        padding: 0;
+        margin-top: 0.5rem;
+    }
+</style>
+{% endblock %}
